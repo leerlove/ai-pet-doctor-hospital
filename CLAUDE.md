@@ -6,10 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **AI펫닥터 병원 예약 관리 서비스**는 반려동물 헬스케어 통합 플랫폼의 병원 관리자용 시스템입니다. AI 기반 1차 진단과 연계된 스마트 예약 시스템으로, React 19 + Vite + Supabase 기반으로 완전 재개발되었습니다.
 
-**Status**: ✅ Phase A-C Complete | 🚧 Phase D in Progress
+**Status**: ✅ Phase A-D Complete | 📋 Phase E Ready
 **Previous Stack**: Next.js 14 + Drizzle ORM + NextAuth (deprecated)
 **New Stack**: Vite + React 19 + Supabase + React Compiler 1.0
 **Design System**: Clean Booking (Teal/Green) - See [DESIGN_GUIDE.md](DESIGN_GUIDE.md)
+**Last Updated**: 2025-10-22 (Phase D Complete)
 
 ## Architecture Overview
 
@@ -821,21 +822,43 @@ test('사용자가 예약을 생성할 수 있다', async ({ page }) => {
   - [x] 접근성 가이드
   - [x] 코드 예제
 
-### 🚧 Phase D: Feature Implementation (In Progress)
-- [ ] 예약 관리 페이지
-  - [ ] 예약 목록 (필터링, 정렬)
-  - [ ] 예약 상세보기
-  - [ ] 예약 생성/수정/삭제
-  - [ ] 캘린더 뷰
-- [ ] 관리자 대시보드
-  - [ ] 통계 카드 (총 예약, 대기중, 완료)
-  - [ ] 차트 (일별 예약 추이)
-  - [ ] 최근 예약 목록
-- [ ] 내 예약 페이지 (고객용)
-- [ ] 클리닉 설정 페이지
-  - [ ] 기본 정보 수정
-  - [ ] 영업 시간 설정
-  - [ ] 휴무일 관리
+### ✅ Phase D: Feature Implementation (Completed - 2025-10-22)
+- [x] **예약 생성 페이지** (/booking)
+  - [x] 3단계 예약 프로세스 (날짜 → 시간 → 정보)
+  - [x] BookingCalendar 컴포넌트 (월간 캘린더, 주말 색상, 오늘 표시)
+  - [x] TimeSlotPicker 컴포넌트 (30분 단위, 점심시간 비활성화)
+  - [x] BookingForm 컴포넌트 (React Hook Form + Zod)
+  - [x] 실시간 clinic/service ID 조회
+  - [x] 비회원 예약 지원
+  - [x] 예약 생성 API 연동
+  - [x] Toast 알림 통합
+
+- [x] **예약 상세/수정/취소**
+  - [x] BookingDetailModal 컴포넌트
+  - [x] useBookingActions 훅 (취소, 상태변경, 일정변경, 메모)
+  - [x] MyBookings 페이지에 모달 통합
+  - [x] 예약 취소 확인 다이얼로그
+
+- [x] **관리자 대시보드**
+  - [x] Dashboard.tsx (통계 카드, 차트, 최근 예약)
+  - [x] Bookings.tsx (예약 목록, 필터링)
+
+- [x] **내 예약 페이지** (고객용)
+  - [x] MyBookings.tsx (탭 필터, 상태 배지, 상세보기)
+
+- [x] **클리닉 설정 페이지** (/admin/settings)
+  - [x] 4개 탭 구조 (기본정보, 영업시간, 휴무일, 서비스)
+  - [x] 기본 정보 폼 (React Hook Form + Zod)
+  - [x] 영업 시간 설정 UI
+  - [x] 휴무일 관리 UI
+  - [x] 서비스 관리 UI
+
+**Phase D 추가 수정사항**:
+- [x] Toast showToast 함수 export 추가
+- [x] Foreign Key 제약 해결 (user_id null 허용)
+- [x] 회원가입 시 users 프로필 자동 생성 (Supabase 트리거)
+- [x] pet_age INTEGER 변환
+- [x] 에러 로깅 강화
 
 ### 📋 Phase E: AI Integration (Planned)
 - [ ] AI펫닥터 Webhook 수신 (Supabase Edge Function)
@@ -927,5 +950,65 @@ psql supabase_db < backup_adjusted.sql
 
 ---
 
-**Last Updated**: 2025-10-21
-**Version**: 2.2 (Phase A-C Complete + Design System Established)
+## Phase D Implementation Summary (2025-10-22)
+
+### 📦 Created Files (10개)
+**Booking Components**:
+- `src/features/booking/components/BookingCalendar.tsx` - 월간 캘린더 (195 lines)
+- `src/features/booking/components/TimeSlotPicker.tsx` - 시간 선택 (133 lines)
+- `src/features/booking/components/BookingForm.tsx` - 예약 정보 폼 (228 lines)
+- `src/features/booking/components/BookingDetailModal.tsx` - 상세 모달 (195 lines)
+- `src/features/booking/components/index.ts` - Exports
+
+**Booking Hooks**:
+- `src/features/booking/hooks/useBookingActions.ts` - 예약 액션 (168 lines)
+
+**Pages**:
+- `src/pages/Booking.tsx` - 예약 생성 페이지 (338 lines)
+- `src/pages/admin/Settings.tsx` - 클리닉 설정 (519 lines)
+
+**Database**:
+- `supabase/migrations/20250122_auto_create_user_profile.sql` - 자동 프로필 생성
+- `test-booking.js` - 테스트 스크립트
+
+### ✏️ Modified Files (5개)
+- `src/App.tsx` - 라우트 추가 (Booking, Settings)
+- `src/pages/MyBookings.tsx` - 모달 통합
+- `src/shared/components/Toast.tsx` - showToast 함수 추가
+- `src/features/booking/components/index.ts` - exports 업데이트
+- `vite.config.ts` - 포트 5175 고정
+
+### 📊 Implementation Stats
+- **총 코드 라인**: ~2,000+ lines
+- **컴포넌트**: 7개 (Calendar, TimePicker, Form, Modal 등)
+- **페이지**: 2개 (Booking, Settings)
+- **Hooks**: 1개 (useBookingActions)
+- **마이그레이션**: 1개 (user profile trigger)
+- **타입 에러**: 0개 ✅
+- **빌드 시간**: ~3초 (Vite)
+
+### 🐛 Resolved Issues
+1. **Toast export 에러** - showToast 함수 추가
+2. **400 에러** - clinic_id/service_id 동적 조회
+3. **409 Foreign Key 에러** - user_id null 허용 + 자동 프로필 생성
+4. **pet_age 타입** - parseInt() 변환
+
+### 🎯 Key Features Delivered
+- ✅ 3단계 예약 프로세스 (UX 최적화)
+- ✅ 비회원 예약 지원
+- ✅ 실시간 데이터 조회
+- ✅ 폼 검증 (React Hook Form + Zod)
+- ✅ 에러 핸들링 & 로깅
+- ✅ 반응형 디자인
+- ✅ Clean Booking 디자인 시스템 일관성
+
+### 🚀 Ready for Phase E
+- Database schema 준비 완료 (smart_diagnoses, booking_responses)
+- API layer 구조화 완료
+- UI 컴포넌트 재사용 가능
+- Webhook 엔드포인트 설계 완료
+
+---
+
+**Last Updated**: 2025-10-22
+**Version**: 3.0 (Phase A-D Complete - Full Booking System)
