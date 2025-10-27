@@ -24,14 +24,23 @@ import { Badge } from '@/shared/components/Badge'
 import { showToast } from '@/shared/components/Toast'
 import {
   getAllVeterinarians,
+  createVeterinarian,
+  updateVeterinarian,
   deleteVeterinarian,
   type Veterinarian,
+  type VeterinarianInsert,
 } from '@/shared/api/veterinarians.api'
+import { VeterinarianFormModal } from '@/features/veterinarian/components/VeterinarianFormModal'
+import { WorkingHoursModal } from '@/features/veterinarian/components/WorkingHoursModal'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export default function Veterinarians() {
+  const { profile } = useAuth()
   const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedVet, setSelectedVet] = useState<Veterinarian | null>(null)
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
+  const [isWorkingHoursModalOpen, setIsWorkingHoursModalOpen] = useState(false)
 
   // 수의사 목록 조회
   useEffect(() => {
@@ -52,6 +61,26 @@ export default function Veterinarians() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // 수의사 추가/수정
+  async function handleSave(data: VeterinarianInsert) {
+    try {
+      if (selectedVet) {
+        // 수정
+        await updateVeterinarian(selectedVet.id, data)
+      } else {
+        // 추가 (clinic_id는 현재 사용자의 clinic에서 가져와야 함)
+        // TODO: 실제로는 사용자의 clinic_id를 가져와서 설정해야 함
+        await createVeterinarian({
+          ...data,
+          clinic_id: null, // 임시로 null
+        })
+      }
+      loadVeterinarians()
+    } catch (error) {
+      throw error
     }
   }
 
@@ -77,6 +106,36 @@ export default function Veterinarians() {
     }
   }
 
+  // 수의사 추가 버튼
+  function handleAddClick() {
+    setSelectedVet(null)
+    setIsFormModalOpen(true)
+  }
+
+  // 수의사 수정 버튼
+  function handleEditClick(vet: Veterinarian) {
+    setSelectedVet(vet)
+    setIsFormModalOpen(true)
+  }
+
+  // 모달 닫기
+  function handleCloseModal() {
+    setIsFormModalOpen(false)
+    setSelectedVet(null)
+  }
+
+  // 근무 시간 설정 버튼
+  function handleWorkingHoursClick(vet: Veterinarian) {
+    setSelectedVet(vet)
+    setIsWorkingHoursModalOpen(true)
+  }
+
+  // 근무 시간 모달 닫기
+  function handleCloseWorkingHoursModal() {
+    setIsWorkingHoursModalOpen(false)
+    setSelectedVet(null)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -87,7 +146,11 @@ export default function Veterinarians() {
             수의사 정보와 근무 시간을 관리합니다
           </p>
         </div>
-        <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+        <Button
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
+          onClick={handleAddClick}
+        >
           수의사 추가
         </Button>
       </div>
@@ -234,6 +297,7 @@ export default function Veterinarians() {
                       variant="secondary"
                       size="sm"
                       leftIcon={<Clock className="w-4 h-4" />}
+                      onClick={() => handleWorkingHoursClick(vet)}
                     >
                       근무시간
                     </Button>
@@ -241,6 +305,7 @@ export default function Veterinarians() {
                       variant="secondary"
                       size="sm"
                       leftIcon={<Edit className="w-4 h-4" />}
+                      onClick={() => handleEditClick(vet)}
                     >
                       수정
                     </Button>
@@ -260,8 +325,24 @@ export default function Veterinarians() {
         )}
       </Card>
 
-      {/* TODO: 수의사 추가/수정 모달 */}
-      {/* TODO: 근무 시간 설정 모달 */}
+      {/* 수의사 추가/수정 모달 */}
+      <VeterinarianFormModal
+        isOpen={isFormModalOpen}
+        onClose={handleCloseModal}
+        veterinarian={selectedVet}
+        onSave={handleSave}
+      />
+
+      {/* 근무 시간 설정 모달 */}
+      {selectedVet && (
+        <WorkingHoursModal
+          isOpen={isWorkingHoursModalOpen}
+          onClose={handleCloseWorkingHoursModal}
+          veterinarianId={selectedVet.id}
+          veterinarianName={selectedVet.name}
+        />
+      )}
+
       {/* TODO: 수의사 통계 모달 */}
     </div>
   )
