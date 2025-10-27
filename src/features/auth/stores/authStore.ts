@@ -55,7 +55,14 @@ export const useAuthStore = create<AuthState>()(
 
       setError: (error) => set({ error }),
 
-      reset: () => set(initialState),
+      reset: () => {
+        console.log('🧹 authStore.reset() 호출 - 상태 초기화 시작')
+        // 상태 먼저 초기화
+        set(initialState)
+        // localStorage에서 auth 데이터 제거
+        localStorage.removeItem('auth-storage')
+        console.log('✅ authStore 초기화 완료')
+      },
     }),
     {
       name: 'auth-storage',

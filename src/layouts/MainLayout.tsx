@@ -6,25 +6,12 @@
 
 import { Link, Outlet } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useLogout } from '@/shared/hooks/useLogout'
 import { User, LogOut } from 'lucide-react'
 
 export function MainLayout() {
-  const { isAuthenticated, profile, logout } = useAuth()
-
-  const handleLogout = async (e: React.MouseEvent) => {
-    e.preventDefault()
-
-    console.log('🚪 로그아웃 프로세스 시작...')
-
-    // 백그라운드에서 로그아웃 실행 (결과를 기다리지 않음)
-    logout().catch((error) => {
-      console.error('❌ 로그아웃 중 오류 발생:', error)
-    })
-
-    // 즉시 페이지 리다이렉트 (로그아웃 완료를 기다리지 않음)
-    console.log('🔄 페이지 새로고침...')
-    window.location.replace('/')
-  }
+  const { isAuthenticated, profile } = useAuth()
+  const { handleLogout, isLoggingOut } = useLogout()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,10 +60,11 @@ export function MainLayout() {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md text-sm font-medium transition-colors"
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>로그아웃</span>
+                    <span>{isLoggingOut ? '로그아웃 중...' : '로그아웃'}</span>
                   </button>
                 </>
               ) : (

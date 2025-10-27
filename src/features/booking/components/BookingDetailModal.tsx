@@ -15,6 +15,7 @@ interface BookingDetailModalProps {
   onCancel?: (booking: Booking) => void
   onApprove?: (booking: Booking) => void
   onReject?: (booking: Booking) => void
+  onRevertToPending?: (booking: Booking) => void
   isAdmin?: boolean
 }
 
@@ -26,6 +27,7 @@ export function BookingDetailModal({
   onCancel,
   onApprove,
   onReject,
+  onRevertToPending,
   isAdmin = false,
 }: BookingDetailModalProps) {
   if (!booking) return null
@@ -197,10 +199,10 @@ export function BookingDetailModal({
         )}
 
         {/* 액션 버튼 */}
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
+        <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
           {/* 관리자 전용: 승인/거절 버튼 (pending 상태일 때만) */}
           {isAdmin && booking.status === 'pending' && (
-            <>
+            <div className="flex gap-3">
               <Button
                 variant="primary"
                 size="md"
@@ -217,12 +219,24 @@ export function BookingDetailModal({
               >
                 ✗ 예약 거절
               </Button>
-            </>
+            </div>
+          )}
+
+          {/* 관리자 전용: 승인 완료 건을 대기로 전환 */}
+          {isAdmin && booking.status === 'confirmed' && onRevertToPending && (
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => onRevertToPending(booking)}
+              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
+            >
+              ← 승인 대기로 전환
+            </Button>
           )}
 
           {/* 일반 사용자 또는 관리자의 기타 액션 */}
           {(!isAdmin || booking.status !== 'pending') && (
-            <>
+            <div className="flex gap-3">
               {canEdit && onEdit && (
                 <Button
                   variant="outline"
@@ -243,12 +257,12 @@ export function BookingDetailModal({
                   예약 취소
                 </Button>
               )}
-              {!canEdit && !canCancel && (
+              {!canEdit && !canCancel && !isAdmin && (
                 <Button variant="outline" size="md" onClick={onClose} className="flex-1">
                   닫기
                 </Button>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -20,26 +20,43 @@ export function useLogout() {
 
     try {
       setIsLoggingOut(true)
-      logger.info('로그아웃 시작...')
+      logger.info('🚪 로그아웃 시작...')
 
-      await logout()
-
-      logger.success('로그아웃 완료')
+      // Toast 먼저 표시
       showToast({
-        title: '로그아웃되었습니다',
-        variant: 'success',
+        title: '로그아웃 중입니다...',
+        description: '잠시만 기다려주세요.',
+        variant: 'info',
         duration: 2000,
       })
 
-      // React Router로 리다이렉트
+      // 로그아웃 실행 (Supabase signOut + localStorage 제거)
+      await logout()
+
+      logger.success('✅ 로그아웃 완료')
+
+      // React Router로 페이지 이동 (새로고침 없음)
       navigate('/', { replace: true })
+
+      // 약간의 딜레이 후 성공 Toast
+      setTimeout(() => {
+        showToast({
+          title: '로그아웃 되었습니다',
+          description: '안전하게 로그아웃 되었습니다.',
+          variant: 'success',
+          duration: 2000,
+        })
+      }, 100)
     } catch (error) {
-      logger.error('로그아웃 실패:', error)
+      logger.error('❌ 로그아웃 실패:', error)
       showToast({
         title: '로그아웃에 실패했습니다',
         description: '다시 시도해주세요.',
         variant: 'error',
+        duration: 3000,
       })
+      // 오류 발생해도 홈으로 이동
+      navigate('/', { replace: true })
     } finally {
       setIsLoggingOut(false)
     }

@@ -6,11 +6,11 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { getBookingsByUserId } from '@/shared/api/bookings.api'
 import { Badge, Button, Card, CardBody, PageHeader } from '@/shared/components'
-import { BookingDetailModal } from '@/features/booking/components'
+import { BookingDetailModal, BookingEditModal } from '@/features/booking/components'
 import { useBookingActions } from '@/features/booking/hooks/useBookingActions'
 import type { Database } from '@/shared/types/database.types'
 import {
@@ -24,20 +24,24 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  ArrowLeft,
+  Home,
 } from 'lucide-react'
 import type { BookingStatus } from '@/features/booking/stores/bookingStore'
 
 type Booking = Database['public']['Tables']['bookings']['Row']
 
 export default function MyBookings() {
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTab, setSelectedTab] = useState<'all' | 'upcoming' | 'past'>('all')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const user = useAuthStore((state) => state.user)
-  const { cancelBooking } = useBookingActions()
+  const { cancelBooking, rescheduleBooking } = useBookingActions()
 
   useEffect(() => {
     if (user) {
@@ -95,6 +99,31 @@ export default function MyBookings() {
 
   const handleCloseModal = () => {
     setIsDetailModalOpen(false)
+    setSelectedBooking(null)
+  }
+
+  const handleEditBooking = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setIsDetailModalOpen(false)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveEdit = async (bookingId: string, newDate: string, newTime: string) => {
+    const success = await rescheduleBooking(
+      bookingId,
+      newDate,
+      newTime,
+      selectedBooking?.status
+    )
+    if (success) {
+      setIsEditModalOpen(false)
+      setSelectedBooking(null)
+      loadBookings() // 목록 새로고침
+    }
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
     setSelectedBooking(null)
   }
 
@@ -170,6 +199,28 @@ export default function MyBookings() {
       <PageHeader title="내 예약" />
 
       <main className="max-w-5xl mx-auto px-6 py-8">
+        {/* Navigation Buttons */}
+        <div className="flex gap-3 mb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            뒤로가기
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            홈으로
+          </Button>
+        </div>
+
         {/* Tabs */}
         <div className="flex space-x-2 border-b border-gray-200 mb-8">
           <button
@@ -383,8 +434,17 @@ export default function MyBookings() {
         isOpen={isDetailModalOpen}
         onClose={handleCloseModal}
         booking={selectedBooking}
+        onEdit={handleEditBooking}
         onCancel={handleCancelBooking}
         isAdmin={false}
+      />
+
+      {/* Booking Edit Modal */}
+      <BookingEditModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        booking={selectedBooking}
+        onSave={handleSaveEdit}
       />
     </div>
   )

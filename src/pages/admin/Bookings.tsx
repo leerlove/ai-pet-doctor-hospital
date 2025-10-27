@@ -20,7 +20,8 @@ import { getAllBookings, subscribeToBookings, updateBooking } from '@/shared/api
 import { getAllServices } from '@/shared/api/services.api'
 import { Badge, Button, Input, TableSkeleton, CardSkeleton } from '@/shared/components'
 import { showToast } from '@/shared/components/Toast'
-import { BookingDetailModal } from '@/features/booking/components'
+import { BookingDetailModal, BookingEditModal } from '@/features/booking/components'
+import { useBookingActions } from '@/features/booking/hooks/useBookingActions'
 import type { Booking } from '@/shared/types/database.types'
 import {
   Calendar,
@@ -36,6 +37,7 @@ import {
 export default function Bookings() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const filteredBookings = useFilteredBookings()
   const filters = useBookingFilters()
@@ -44,6 +46,8 @@ export default function Bookings() {
 
   const { setBookings, setFilters, clearFilters, setServices, setLoading, addBooking, updateBooking: updateBookingInStore } =
     useBookingStore()
+
+  const { rescheduleBooking } = useBookingActions()
 
   // Load bookings and services on mount
   useEffect(() => {
@@ -118,6 +122,52 @@ export default function Bookings() {
     } catch (error) {
       console.error('Failed to reject booking:', error)
       showToast({ title: '오류', description: '예약 거절에 실패했습니다', variant: 'error' })
+    }
+  }
+
+  const handleEditBooking = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setIsDetailModalOpen(false)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveEdit = async (bookingId: string, newDate: string, newTime: string) => {
+    const success = await rescheduleBooking(
+      bookingId,
+      newDate,
+      newTime,
+      selectedBooking?.status
+    )
+    if (success) {
+      setIsEditModalOpen(false)
+      setSelectedBooking(null)
+      loadData() // 목록 새로고침
+    }
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setSelectedBooking(null)
+  }
+
+  // 승인 완료 건을 다시 승인 대기로 전환
+  const handleRevertToPending = async (booking: Booking) => {
+    if (!window.confirm('승인된 예약을 다시 승인 대기 상태로 변경하시겠습니까?')) {
+      return
+    }
+
+    try {
+      const updated = await updateBooking(booking.id, { status: 'pending' })
+      updateBookingInStore(booking.id, updated)
+      showToast({
+        title: '상태 변경 완료',
+        description: '예약이 승인 대기 상태로 변경되었습니다',
+        variant: 'success',
+      })
+      setIsDetailModalOpen(false)
+    } catch (error) {
+      console.error('Failed to revert to pending:', error)
+      showToast({ title: '오류', description: '상태 변경에 실패했습니다', variant: 'error' })
     }
   }
 
@@ -426,9 +476,19 @@ export default function Bookings() {
           setSelectedBooking(null)
         }}
         booking={selectedBooking}
+        onEdit={handleEditBooking}
         onApprove={handleApprove}
         onReject={handleReject}
+        onRevertToPending={handleRevertToPending}
         isAdmin={true}
+      />
+
+      {/* Booking Edit Modal */}
+      <BookingEditModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        booking={selectedBooking}
+        onSave={handleSaveEdit}
       />
 
       {/* TODO: Create Modal */}

@@ -113,24 +113,32 @@ export function useBookingActions() {
 
   /**
    * 예약 날짜/시간 변경
+   * 승인된(confirmed) 예약을 수정하면 대기(pending) 상태로 변경
    */
   const rescheduleBooking = async (
     bookingId: string,
     newDate: string,
-    newTime: string
+    newTime: string,
+    currentStatus?: string
   ): Promise<boolean> => {
     try {
       setIsLoading(true)
 
+      // 승인된 예약을 수정하면 대기 상태로 변경
+      const shouldRevertToPending = currentStatus === 'confirmed'
+
       await updateBooking(bookingId, {
         booking_date: newDate,
         booking_time: newTime,
+        status: shouldRevertToPending ? 'pending' : undefined,
         updated_at: new Date().toISOString(),
       })
 
       showToast({
         title: '예약 일정이 변경되었습니다',
-        description: `${newDate} ${newTime}`,
+        description: shouldRevertToPending
+          ? '승인된 예약이 수정되어 다시 승인 대기 상태가 되었습니다.'
+          : `${newDate} ${newTime}`,
         variant: 'success',
       })
 

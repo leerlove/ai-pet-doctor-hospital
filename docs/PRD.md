@@ -4,8 +4,8 @@
 ---
 
 ## 📋 문서 정보
-- **버전**: 2.1
-- **최종 업데이트**: 2025-10-27
+- **버전**: 2.3
+- **최종 업데이트**: 2025-10-27 (수의사 선택 기능 및 버그 수정)
 - **작성일**: 2025-10-20
 - **프로젝트명**: AI펫닥터 수의과 클리닉 예약 및 관리 시스템
 - **개발 방식**: 완전 재개발 (React 19 + Supabase)
@@ -2331,10 +2331,209 @@ jobs:
 ### 12.3 변경 이력
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |------|------|-----------|--------|
+| 2.3 | 2025-10-27 | 수의사 선택 기능 및 로그아웃 이슈 수정 완료 | AI Assistant |
 | 2.2 | 2025-10-21 | Phase A-D 완료 상태 업데이트, 구현된 기능 체크 | AI Assistant |
 | 2.1 | 2025-10-20 | AI펫닥터 통합 시스템으로 명칭 변경 및 연동 기능 추가 | AI Assistant |
 | 2.0 | 2025-10-20 | React + Supabase 재개발 PRD 작성 | AI Assistant |
 | 1.0 | 2025-10-19 | Next.js 기반 초기 명세서 | System Analysis |
+
+---
+
+## 13. 최신 업데이트 (2025-10-27)
+
+### 13.1 신규 기능 구현
+
+#### ✅ 수의사 선택 기능 (Veterinarian Selection)
+**구현 내용:**
+- `veterinarians` 테이블 추가 (수의사 정보 관리)
+- 예약 시 담당 수의사 선택 기능
+- 시간대별 예약 가능한 수의사 필터링
+- 중복 예약 방지 (승인된 예약과 시간 중복 체크)
+
+**데이터베이스 스키마:**
+```sql
+CREATE TABLE veterinarians (
+  id UUID PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id),
+  name TEXT NOT NULL,
+  title TEXT,  -- 원장, 수의사, 전문의
+  specialization TEXT,  -- 일반진료, 외과, 내과, 피부과 등
+  license_number TEXT,
+  is_active BOOLEAN DEFAULT true
+);
+
+ALTER TABLE bookings
+ADD COLUMN veterinarian_id UUID REFERENCES veterinarians(id);
+```
+
+**API 함수:**
+- `getAllVeterinarians()`: 모든 수의사 조회
+- `getAvailableVeterinarians(clinicId, date, time)`: 특정 시간대 예약 가능 수의사 조회
+- `createVeterinarian()`, `updateVeterinarian()`, `deleteVeterinarian()`
+
+**UI 컴포넌트:**
+- [BookingForm.tsx](../src/features/booking/components/BookingForm.tsx): 수의사 선택 UI 추가
+- [Booking.tsx](../src/pages/Booking.tsx): 수의사 데이터 로딩 및 전달
+
+**샘플 데이터:**
+- 김수의 (원장 - 일반진료, 외과)
+- 이진료 (수의사 - 내과, 피부과)
+- 박전문 (전문의 - 정형외과, 재활)
+
+---
+
+### 13.2 버그 수정
+
+#### ✅ 로그아웃 타이밍 이슈 해결
+**문제:**
+- 로그아웃 버튼 클릭 시 헤더만 새로고침되고 실제 로그아웃 안되는 현상
+- Zustand persist middleware가 localStorage에서 자동 복원
+- `window.location.href`가 `logout()` 완료 전에 실행되어 프로세스 중단
+
+**해결 방법:**
+1. `authStore.ts`: `reset()` 함수에서 `localStorage.removeItem('auth-storage')` 추가
+2. `MainLayout.tsx`: 로그아웃 후 100ms 딜레이 추가, `window.location.replace()` 사용
+3. `useLogout.ts`: 동일한 타이밍 수정 적용
+
+**수정된 코드:**
+```typescript
+// authStore.ts
+reset: () => {
+  localStorage.removeItem('auth-storage')  // localStorage 완전 제거
+  set(initialState)
+}
+
+// MainLayout.tsx & useLogout.ts
+await logout()
+await new Promise(resolve => setTimeout(resolve, 100))  // 100ms 대기
+window.location.replace('/')  // 강제 새로고침
+```
+
+**영향받은 파일:**
+- [src/features/auth/stores/authStore.ts](../src/features/auth/stores/authStore.ts)
+- [src/layouts/MainLayout.tsx](../src/layouts/MainLayout.tsx)
+- [src/shared/hooks/useLogout.ts](../src/shared/hooks/useLogout.ts)
+
+---
+
+#### ✅ 대시보드 로딩 화면 무한 루프 수정
+**문제:**
+- 대시보드 초기 로딩 시 백엔드 작업은 완료되었으나 프론트엔드 반영 안됨
+- 로컬 state(`isInitialLoad`)와 Zustand store state(`isLoading`) 혼용으로 타이밍 이슈
+
+**해결 방법:**
+- 로컬 `isLoading` state만 사용하도록 단순화
+- `setTimeout` 제거, 즉시 false 설정
+
+**수정 전:**
+```typescript
+const [isInitialLoad, setIsInitialLoad] = useState(true)
+const isLoading = useBookingLoading()  // Store에서 가져옴
+
+if (isInitialLoad && isLoading) {  // 복잡한 조건
+  return <LoadingScreen />
+}
+```
+
+**수정 후:**
+```typescript
+const [isLoading, setIsLoading] = useState(true)  // 로컬 state만 사용
+
+if (isLoading) {  // 단순 조건
+  return <LoadingScreen />
+}
+```
+
+**영향받은 파일:**
+- [src/pages/admin/Dashboard.tsx](../src/pages/admin/Dashboard.tsx)
+
+---
+
+### 13.3 디버깅 개선
+
+#### 콘솔 로깅 강화
+**추가된 로그:**
+- `getAvailableVeterinarians()`: 수의사 조회 전 과정 로깅
+  - 입력 파라미터 (clinicId, date, time)
+  - 예약된 수의사 ID
+  - 전체 수의사 수
+  - 예약 가능한 수의사 수
+
+**예시:**
+```
+🔍 [수의사 조회] 시작 ---
+  - clinicId: xxx-xxx-xxx
+  - date: 2025-10-28
+  - time: 14:00
+  - 예약된 수의사 ID: []
+  - 조회된 전체 수의사 수: 3
+  - 예약 가능한 수의사 수: 3
+🔍 [수의사 조회] 완료 ---
+```
+
+---
+
+### 13.4 데이터베이스 이슈 해결
+
+#### Veterinarians 테이블 데이터 삽입 실패
+**문제:**
+- 마이그레이션 SQL에서 `WHERE c.name = '행복동물병원'`이 매칭 안됨
+- 실제 클리닉 이름: '행복동물클리닉병원'
+
+**해결:**
+- 정확한 클리닉 이름으로 INSERT SQL 재작성 및 실행
+- [insert-vets-correct-name.sql](../insert-vets-correct-name.sql) 파일 생성
+
+**실행 SQL:**
+```sql
+INSERT INTO veterinarians (clinic_id, name, title, specialization, is_active)
+SELECT c.id, '김수의', '원장', '일반진료, 외과', true
+FROM clinics c
+WHERE c.name = '행복동물클리닉병원'
+LIMIT 1;
+-- (이진료, 박전문도 동일하게 삽입)
+```
+
+---
+
+### 13.5 작업 요약
+
+| 작업 | 상태 | 파일 수 | 비고 |
+|------|------|---------|------|
+| 수의사 선택 기능 구현 | ✅ 완료 | 5개 | DB 마이그레이션, API, UI |
+| 로그아웃 이슈 수정 | ✅ 완료 | 3개 | localStorage 완전 제거 |
+| 로딩 화면 무한 루프 수정 | ✅ 완료 | 1개 | State 관리 단순화 |
+| 디버깅 로그 추가 | ✅ 완료 | 2개 | 수의사 API, 대시보드 |
+| 데이터베이스 데이터 삽입 | ✅ 완료 | - | 수의사 3명 추가 |
+
+**생성된 파일:**
+- `supabase/migrations/20250127_add_veterinarians_table.sql`
+- `src/shared/api/veterinarians.api.ts`
+- `insert-vets-correct-name.sql`
+- `verify-veterinarians.sql`
+- `fix-veterinarians-insert.sql`
+
+**수정된 파일:**
+- `src/pages/Booking.tsx`
+- `src/features/booking/components/BookingForm.tsx`
+- `src/features/auth/stores/authStore.ts`
+- `src/layouts/MainLayout.tsx`
+- `src/shared/hooks/useLogout.ts`
+- `src/pages/admin/Dashboard.tsx`
+
+---
+
+### 13.6 알려진 이슈 및 향후 작업
+
+#### 미해결 이슈
+- 없음 (현재까지 보고된 이슈 모두 해결)
+
+#### 다음 단계
+- [ ] Vercel 프로덕션 배포
+- [ ] 수의사 관리 페이지 (관리자용)
+- [ ] 수의사별 예약 통계
+- [ ] 수의사 근무 시간 설정
+- [ ] Phase E: AI펫닥터 연동
 
 ---
 

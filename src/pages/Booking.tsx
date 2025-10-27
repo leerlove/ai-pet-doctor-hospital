@@ -11,9 +11,15 @@ import type { BookingFormData } from '@/features/booking/components'
 import { createBooking } from '@/shared/api/bookings.api'
 import { getAllClinics } from '@/shared/api/clinics.api'
 import { getAllServices } from '@/shared/api/services.api'
+import { getAvailableVeterinarians, type Veterinarian } from '@/shared/api/veterinarians.api'
+import { getUserProfile } from '@/features/auth/api/auth.api'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { showToast } from '@/shared/components/Toast'
 import { PageHeader } from '@/shared/components'
+import { formatDateToYYYYMMDD } from '@/shared/utils/date'
+import type { Database } from '@/shared/types/database.types'
+
+type DBUser = Database['public']['Tables']['users']['Row']
 
 type BookingStep = 'date' | 'time' | 'info'
 
@@ -39,6 +45,8 @@ export default function Booking() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clinicId, setClinicId] = useState<string | null>(null)
   const [serviceId, setServiceId] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<DBUser | null>(null)
+  const [availableVeterinarians, setAvailableVeterinarians] = useState<Veterinarian[]>([])
 
   // 클리닉과 서비스 ID 조회
   useEffect(() => {
@@ -96,6 +104,46 @@ export default function Booking() {
     loadClinicAndService()
   }, [])
 
+  // 사용자 프로필 조회 (자동 입력용)
+  useEffect(() => {
+    async function loadUserProfile() {
+      if (user?.id) {
+        try {
+          const profile = await getUserProfile(user.id)
+          setUserProfile(profile)
+          console.log('✅ 사용자 프로필 조회 성공:', profile)
+        } catch (error) {
+          console.error('❌ 사용자 프로필 조회 실패:', error)
+          // 프로필 조회 실패는 치명적이지 않으므로 조용히 처리
+        }
+      }
+    }
+
+    loadUserProfile()
+  }, [user])
+
+  // 날짜와 시간이 선택되면 예약 가능한 수의사 조회
+  useEffect(() => {
+    async function loadAvailableVeterinarians() {
+      if (!clinicId || !selectedDate || !selectedTime) {
+        setAvailableVeterinarians([])
+        return
+      }
+
+      try {
+        const formattedDate = formatDateToYYYYMMDD(selectedDate)
+        const vets = await getAvailableVeterinarians(clinicId, formattedDate, selectedTime)
+        setAvailableVeterinarians(vets)
+        console.log('✅ 예약 가능한 수의사:', vets)
+      } catch (error) {
+        console.error('❌ 수의사 조회 실패:', error)
+        setAvailableVeterinarians([])
+      }
+    }
+
+    loadAvailableVeterinarians()
+  }, [clinicId, selectedDate, selectedTime])
+
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     setCurrentStep('time')
@@ -143,7 +191,8 @@ export default function Booking() {
         clinic_id: clinicId,
         service_id: serviceId,
         user_id: user.id, // 로그인한 사용자 ID
-        booking_date: selectedDate.toISOString().split('T')[0],
+        veterinarian_id: data.veterinarianId,
+        booking_date: formatDateToYYYYMMDD(selectedDate),
         booking_time: selectedTime,
         status: 'pending' as const,
         customer_name: data.customerName,
@@ -154,6 +203,7 @@ export default function Booking() {
         pet_breed: data.petBreed || null,
         pet_age: data.petAge ? parseInt(data.petAge) : null,
         symptoms: data.symptoms,
+        is_first_visit: data.isFirstVisit,
         source: 'direct' as const,
       }
 
@@ -372,6 +422,16 @@ export default function Booking() {
               <BookingForm
                 onSubmit={handleFormSubmit}
                 isLoading={isSubmitting}
+                initialData={
+                  userProfile
+                    ? {
+                        customerName: userProfile.full_name || '',
+                        customerPhone: userProfile.phone || '',
+                        customerEmail: userProfile.email || '',
+                      }
+                    : undefined
+                }
+                availableVeterinarians={availableVeterinarians}
               />
             )}
           </div>

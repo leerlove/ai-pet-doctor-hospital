@@ -80,9 +80,10 @@ export function useAuth() {
     const {
       data: { subscription },
     } = onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event)
+      console.log('🔔 Auth state changed:', event, session ? '(session exists)' : '(no session)')
 
       if (event === 'SIGNED_IN' && session) {
+        console.log('✅ SIGNED_IN 이벤트 - 사용자 정보 업데이트')
         setSession(session)
         setUser(session.user)
 
@@ -92,8 +93,10 @@ export function useAuth() {
           setProfile(profile)
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log('🚪 SIGNED_OUT 이벤트 - 상태 초기화')
         reset()
       } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('🔄 TOKEN_REFRESHED 이벤트')
         setSession(session)
       }
     })
@@ -186,15 +189,24 @@ export function useAuth() {
     try {
       setLoading(true)
       setError(null)
+      console.log('🔓 useAuth.logout() 시작')
 
+      // Supabase에서 로그아웃
+      console.log('📡 Supabase signOut 호출...')
       await signOut()
+      console.log('✅ Supabase signOut 완료')
+
+      // 로컬 상태 초기화
+      console.log('🧹 로컬 상태 초기화...')
       reset()
     } catch (error: any) {
-      console.error('로그아웃 실패:', error)
+      console.error('❌ 로그아웃 실패:', error)
+      // 에러가 발생해도 로컬 상태는 초기화
+      reset()
       setError(error.message)
-      throw error
     } finally {
       setLoading(false)
+      console.log('✅ useAuth.logout() 완료')
     }
   }, [setLoading, setError, reset])
 

@@ -3,6 +3,7 @@
  * 예약 정보 입력 폼 (고객정보, 펫 정보, 증상)
  */
 
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,29 +22,55 @@ const bookingFormSchema = z.object({
   petBreed: z.string().optional(),
   petAge: z.string().optional(),
   symptoms: z.string().min(5, '증상을 5자 이상 입력해주세요'),
+  isFirstVisit: z.boolean(),
+  veterinarianId: z.string().min(1, '담당 수의사를 선택해주세요'),
 })
 
 export type BookingFormData = z.infer<typeof bookingFormSchema>
 
+interface Veterinarian {
+  id: string
+  name: string
+  title?: string
+  specialization?: string
+}
+
 interface BookingFormProps {
   onSubmit: (data: BookingFormData) => void
   isLoading?: boolean
+  initialData?: {
+    customerName?: string
+    customerPhone?: string
+    customerEmail?: string
+  }
+  availableVeterinarians?: Veterinarian[]
 }
 
-export function BookingForm({ onSubmit, isLoading = false }: BookingFormProps) {
+export function BookingForm({ onSubmit, isLoading = false, initialData, availableVeterinarians = [] }: BookingFormProps) {
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      customerName: '',
-      customerPhone: '',
-      customerEmail: '',
+      customerName: initialData?.customerName || '',
+      customerPhone: initialData?.customerPhone || '',
+      customerEmail: initialData?.customerEmail || '',
       petName: '',
       petSpecies: '',
       petBreed: '',
       petAge: '',
       symptoms: '',
+      isFirstVisit: true,
+      veterinarianId: '',
     },
   })
+
+  // initialData가 변경되면 폼 업데이트
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.customerName) form.setValue('customerName', initialData.customerName)
+      if (initialData.customerPhone) form.setValue('customerPhone', initialData.customerPhone)
+      if (initialData.customerEmail) form.setValue('customerEmail', initialData.customerEmail)
+    }
+  }, [initialData, form])
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, '')
@@ -180,6 +207,63 @@ export function BookingForm({ onSubmit, isLoading = false }: BookingFormProps) {
         </div>
       </div>
 
+      {/* 담당 수의사 선택 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="w-5 h-5 text-teal-600" />
+          <h3 className="text-lg font-semibold text-gray-900">담당 수의사</h3>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            담당 수의사 선택 <span className="text-red-500">*</span>
+          </label>
+          {availableVeterinarians.length === 0 ? (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+              선택한 날짜/시간에 예약 가능한 수의사가 없습니다.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {availableVeterinarians.map((vet) => (
+                <label
+                  key={vet.id}
+                  className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    form.watch('veterinarianId') === vet.id
+                      ? 'border-teal-500 bg-teal-50'
+                      : 'border-gray-200 hover:border-teal-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={vet.id}
+                    {...form.register('veterinarianId')}
+                    className="mt-1 w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">{vet.name}</span>
+                      {vet.title && (
+                        <span className="px-2 py-0.5 text-xs font-medium text-teal-700 bg-teal-100 rounded">
+                          {vet.title}
+                        </span>
+                      )}
+                    </div>
+                    {vet.specialization && (
+                      <p className="mt-1 text-sm text-gray-600">{vet.specialization}</p>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+          {form.formState.errors.veterinarianId && (
+            <p className="mt-2 text-sm text-red-600">
+              {form.formState.errors.veterinarianId.message}
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* 증상/방문 목적 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -187,21 +271,36 @@ export function BookingForm({ onSubmit, isLoading = false }: BookingFormProps) {
           <h3 className="text-lg font-semibold text-gray-900">증상 및 방문 목적</h3>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            증상 설명 <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            {...form.register('symptoms')}
-            rows={4}
-            placeholder="반려동물의 증상이나 방문 목적을 자세히 적어주세요.&#10;예) 구토를 계속하고 식욕이 없어요."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
-          />
-          {form.formState.errors.symptoms && (
-            <p className="mt-1 text-sm text-red-600">
-              {form.formState.errors.symptoms.message}
-            </p>
-          )}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              증상 설명 <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              {...form.register('symptoms')}
+              rows={4}
+              placeholder="반려동물의 증상이나 방문 목적을 자세히 적어주세요.&#10;예) 구토를 계속하고 식욕이 없어요."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+            />
+            {form.formState.errors.symptoms && (
+              <p className="mt-1 text-sm text-red-600">
+                {form.formState.errors.symptoms.message}
+              </p>
+            )}
+          </div>
+
+          {/* 첫 방문 고객 체크박스 */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isFirstVisit"
+              {...form.register('isFirstVisit')}
+              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 focus:ring-2"
+            />
+            <label htmlFor="isFirstVisit" className="text-sm font-medium text-gray-700 cursor-pointer">
+              첫 방문 고객입니다
+            </label>
+          </div>
         </div>
       </div>
 

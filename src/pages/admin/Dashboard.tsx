@@ -5,7 +5,7 @@
  * - 오늘의 일정
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useBookingStore, useBookingStats, type BookingStatus } from '@/features/booking/stores/bookingStore'
 import { getAllBookings } from '@/shared/api/bookings.api'
@@ -22,8 +22,9 @@ import {
 } from 'lucide-react'
 
 export default function Dashboard() {
+  const [isLoading, setIsLoading] = useState(true)
   const stats = useBookingStats()
-  const { bookings, setBookings, setLoading } = useBookingStore()
+  const { bookings, setBookings } = useBookingStore()
 
   useEffect(() => {
     loadBookings()
@@ -31,13 +32,16 @@ export default function Dashboard() {
 
   const loadBookings = async () => {
     try {
-      setLoading(true)
+      setIsLoading(true)
+      console.log('📊 [Dashboard] 예약 데이터 로딩 시작...')
       const data = await getAllBookings()
+      console.log('📊 [Dashboard] 예약 데이터 로딩 완료:', data.length, '건')
       setBookings(data)
     } catch (error) {
-      console.error('Failed to load bookings:', error)
+      console.error('📊 [Dashboard] 예약 데이터 로딩 실패:', error)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
+      console.log('📊 [Dashboard] 로딩 상태 해제')
     }
   }
 
@@ -73,6 +77,18 @@ export default function Dashboard() {
     }
 
     return <Badge variant={variants[status]}>{labels[status]}</Badge>
+  }
+
+  // 초기 로딩 중
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-teal-200 border-t-teal-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">대시보드를 불러오는 중...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
