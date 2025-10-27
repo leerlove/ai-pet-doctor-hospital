@@ -37,7 +37,7 @@ const initialState = {
 
 /**
  * Auth Store
- * - Supabase 세션과 동기화
+ * - localStorage에 세션 정보 저장 (persist)
  * - 페이지 새로고침 시에도 로그인 상태 유지
  */
 export const useAuthStore = create<AuthState>()(
@@ -65,24 +65,6 @@ export const useAuthStore = create<AuthState>()(
         session: state.session,
         profile: state.profile,
       }),
-      // Supabase 세션과 동기화를 위해 storage 설정
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name)
-          if (!str) return null
-          try {
-            return JSON.parse(str)
-          } catch {
-            return null
-          }
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value))
-        },
-        removeItem: (name) => {
-          localStorage.removeItem(name)
-        },
-      },
     }
   )
 )

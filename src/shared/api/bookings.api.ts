@@ -15,9 +15,30 @@ import type {
 // ============================================================================
 
 /**
- * 모든 예약 조회
+ * 모든 예약 조회 (최근 3개월만)
+ * 성능 최적화: 전체 데이터 대신 최근 데이터만 조회
  */
 export async function getAllBookings(): Promise<Booking[]> {
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .gte('booking_date', threeMonthsAgo.toISOString().split('T')[0])
+    .order('booking_date', { ascending: false })
+    .order('booking_time', { ascending: false })
+    .limit(500) // 최대 500개로 제한
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * 모든 예약 조회 (기간 제한 없음)
+ * 관리자 전체 내역 조회용
+ */
+export async function getAllBookingsUnlimited(): Promise<Booking[]> {
   const { data, error } = await supabase
     .from('bookings')
     .select('*')

@@ -33,3 +33,5 @@ dist-ssr
 # Windows reserved names
 nul
 NUL
+
+.vercel

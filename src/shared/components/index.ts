@@ -52,3 +52,6 @@ export { ProtectedRoute } from './ProtectedRoute'
 
 // Error Boundary
 export { ErrorBoundary } from './ErrorBoundary'
+
+// Skeleton
+export { Skeleton, TableSkeleton, CardSkeleton } from './Skeleton'

@@ -18,7 +18,7 @@ import {
 } from '@/features/booking/stores/bookingStore'
 import { getAllBookings, subscribeToBookings, updateBooking } from '@/shared/api/bookings.api'
 import { getAllServices } from '@/shared/api/services.api'
-import { Badge, Button, Input } from '@/shared/components'
+import { Badge, Button, Input, TableSkeleton, CardSkeleton } from '@/shared/components'
 import { showToast } from '@/shared/components/Toast'
 import { BookingDetailModal } from '@/features/booking/components'
 import type { Booking } from '@/shared/types/database.types'
@@ -45,10 +45,21 @@ export default function Bookings() {
   const { setBookings, setFilters, clearFilters, setServices, setLoading, addBooking, updateBooking: updateBookingInStore } =
     useBookingStore()
 
-  // Load bookings and services
+  // Load bookings and services on mount
   useEffect(() => {
     loadData()
+    loadServicesOnce()
   }, [])
+
+  // Services는 한 번만 로드 (변경 빈도 낮음)
+  const loadServicesOnce = async () => {
+    try {
+      const servicesData = await getAllServices()
+      setServices(servicesData)
+    } catch (error) {
+      console.error('Failed to load services:', error)
+    }
+  }
 
   // Subscribe to realtime updates
   useEffect(() => {
@@ -69,15 +80,11 @@ export default function Bookings() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [bookingsData, servicesData] = await Promise.all([
-        getAllBookings(),
-        getAllServices(),
-      ])
+      const bookingsData = await getAllBookings()
       setBookings(bookingsData)
-      setServices(servicesData)
     } catch (error) {
-      console.error('Failed to load data:', error)
-      showToast({ title: '오류', description: '데이터를 불러오는데 실패했습니다', variant: 'error' })
+      console.error('Failed to load bookings:', error)
+      showToast({ title: '오류', description: '예약 데이터를 불러오는데 실패했습니다', variant: 'error' })
     } finally {
       setLoading(false)
     }
@@ -90,11 +97,11 @@ export default function Bookings() {
 
   const handleApprove = async (booking: Booking) => {
     try {
-      await updateBooking(booking.id, { status: 'confirmed' })
-      updateBookingInStore(booking.id, { ...booking, status: 'confirmed' })
+      const updated = await updateBooking(booking.id, { status: 'confirmed' })
+      updateBookingInStore(booking.id, updated)
       showToast({ title: '예약 승인', description: '예약이 승인되었습니다', variant: 'success' })
       setIsDetailModalOpen(false)
-      loadData() // 새로고침
+      // loadData() 제거 - Realtime 구독과 Store 업데이트로 충분
     } catch (error) {
       console.error('Failed to approve booking:', error)
       showToast({ title: '오류', description: '예약 승인에 실패했습니다', variant: 'error' })
@@ -103,11 +110,11 @@ export default function Bookings() {
 
   const handleReject = async (booking: Booking) => {
     try {
-      await updateBooking(booking.id, { status: 'cancelled' })
-      updateBookingInStore(booking.id, { ...booking, status: 'cancelled' })
+      const updated = await updateBooking(booking.id, { status: 'cancelled' })
+      updateBookingInStore(booking.id, updated)
       showToast({ title: '예약 거절', description: '예약이 취소되었습니다', variant: 'success' })
       setIsDetailModalOpen(false)
-      loadData() // 새로고침
+      // loadData() 제거 - Realtime 구독과 Store 업데이트로 충분
     } catch (error) {
       console.error('Failed to reject booking:', error)
       showToast({ title: '오류', description: '예약 거절에 실패했습니다', variant: 'error' })
@@ -198,32 +205,36 @@ export default function Bookings() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-teal-50">
-            <div className="text-sm text-gray-600 mb-1">전체</div>
-            <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
+        {isLoading ? (
+          <CardSkeleton count={6} />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-teal-50">
+              <div className="text-sm text-gray-600 mb-1">전체</div>
+              <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-amber-50">
+              <div className="text-sm text-gray-600 mb-1">대기중</div>
+              <div className="text-3xl font-bold text-amber-600">{stats.pending}</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-teal-50">
+              <div className="text-sm text-gray-600 mb-1">승인됨</div>
+              <div className="text-3xl font-bold text-teal-600">{stats.confirmed}</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-emerald-50">
+              <div className="text-sm text-gray-600 mb-1">완료</div>
+              <div className="text-3xl font-bold text-emerald-600">{stats.completed}</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <div className="text-sm text-gray-600 mb-1">취소</div>
+              <div className="text-3xl font-bold text-gray-600">{stats.cancelled}</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-red-50">
+              <div className="text-sm text-gray-600 mb-1">노쇼</div>
+              <div className="text-3xl font-bold text-red-600">{stats.noShow}</div>
+            </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-amber-50">
-            <div className="text-sm text-gray-600 mb-1">대기중</div>
-            <div className="text-3xl font-bold text-amber-600">{stats.pending}</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-teal-50">
-            <div className="text-sm text-gray-600 mb-1">승인됨</div>
-            <div className="text-3xl font-bold text-teal-600">{stats.confirmed}</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-emerald-50">
-            <div className="text-sm text-gray-600 mb-1">완료</div>
-            <div className="text-3xl font-bold text-emerald-600">{stats.completed}</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <div className="text-sm text-gray-600 mb-1">취소</div>
-            <div className="text-3xl font-bold text-gray-600">{stats.cancelled}</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-red-50">
-            <div className="text-sm text-gray-600 mb-1">노쇼</div>
-            <div className="text-3xl font-bold text-red-600">{stats.noShow}</div>
-          </div>
-        </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-teal-50">
@@ -288,9 +299,8 @@ export default function Bookings() {
         {/* Bookings Table */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-teal-50">
           {isLoading ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-200 border-t-teal-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">로딩 중...</p>
+            <div className="p-6">
+              <TableSkeleton rows={10} />
             </div>
           ) : filteredBookings.length === 0 ? (
             <div className="p-12 text-center">
