@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { ToastContainer } from '@/shared/components'
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
+import { AdminLayout } from '@/layouts/AdminLayout'
 
 // Pages
 import Home from '@/pages/Home'
@@ -71,45 +72,20 @@ function App() {
 
         {/* Protected Routes - Admin */}
         <Route
-          path="/admin/dashboard"
+          path="/admin"
           element={
             <ProtectedRoute requireAdmin>
-              <Dashboard />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/admin/bookings"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Bookings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/settings"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/veterinarians"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Veterinarians />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="veterinarians" element={<Veterinarians />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        </Route>
 
         {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
