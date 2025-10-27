@@ -86,13 +86,19 @@ export interface VeterinarianWorkingHoursUpdate {
  * 모든 수의사 조회
  */
 export async function getAllVeterinarians(): Promise<Veterinarian[]> {
+  console.log('🔍 getAllVeterinarians 호출')
   const { data, error } = await supabase
     .from('veterinarians')
     .select('*')
-    .eq('is_active', true)
     .order('name')
 
-  if (error) throw error
+  if (error) {
+    console.error('❌ 수의사 조회 실패:', error)
+    throw error
+  }
+
+  console.log('✅ 수의사 조회 성공:', data?.length, '명')
+  console.log('데이터:', data)
   return data || []
 }
 

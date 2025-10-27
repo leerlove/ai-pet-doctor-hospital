@@ -50,13 +50,21 @@ export default function Veterinarians() {
   async function loadVeterinarians() {
     try {
       setIsLoading(true)
+      console.log('📋 수의사 목록 조회 시작...')
       const data = await getAllVeterinarians()
+      console.log('📋 조회 완료:', data)
       setVeterinarians(data)
     } catch (error: any) {
-      console.error('수의사 조회 실패:', error)
+      console.error('❌ 수의사 조회 실패:', error)
+      console.error('에러 상세:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      })
       showToast({
         title: '수의사 조회 실패',
-        description: error.message,
+        description: error.message || '알 수 없는 오류가 발생했습니다.',
         variant: 'error',
       })
     } finally {
