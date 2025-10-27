@@ -16,7 +16,10 @@ export function useLogout() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = useCallback(async () => {
-    if (isLoggingOut) return // 중복 클릭 방지
+    if (isLoggingOut) {
+      logger.info('⏸️ 이미 로그아웃 진행 중...')
+      return // 중복 클릭 방지
+    }
 
     try {
       setIsLoggingOut(true)
@@ -35,7 +38,11 @@ export function useLogout() {
 
       logger.success('✅ 로그아웃 완료')
 
+      // 상태가 완전히 정리될 때까지 약간 대기
+      await new Promise(resolve => setTimeout(resolve, 100))
+
       // React Router로 페이지 이동 (새로고침 없음)
+      logger.info('🏠 홈으로 이동...')
       navigate('/', { replace: true })
 
       // 약간의 딜레이 후 성공 Toast
@@ -46,7 +53,7 @@ export function useLogout() {
           variant: 'success',
           duration: 2000,
         })
-      }, 100)
+      }, 200)
     } catch (error) {
       logger.error('❌ 로그아웃 실패:', error)
       showToast({
