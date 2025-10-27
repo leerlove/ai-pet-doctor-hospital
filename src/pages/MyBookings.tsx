@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { getBookingsByUserId } from '@/shared/api/bookings.api'
-import { Badge, Button, Card, CardBody } from '@/shared/components'
+import { Badge, Button, Card, CardBody, PageHeader } from '@/shared/components'
 import { BookingDetailModal } from '@/features/booking/components'
 import { useBookingActions } from '@/features/booking/hooks/useBookingActions'
 import type { Database } from '@/shared/types/database.types'
@@ -165,42 +165,9 @@ export default function MyBookings() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b border-teal-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2">
-              <Heart className="w-8 h-8 text-teal-500" />
-              <span className="text-2xl font-bold text-gray-900">AI펫닥터 병원</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-              >
-                홈
-              </Link>
-              <Link
-                to="/my-bookings"
-                className="text-teal-600 font-medium"
-              >
-                내 예약
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-teal-100">
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">내 예약</h1>
-          <p className="text-gray-600">
-            {user?.email}님의 예약 내역을 확인하세요
-          </p>
-        </div>
-      </div>
+      <PageHeader title="내 예약" />
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Tabs */}

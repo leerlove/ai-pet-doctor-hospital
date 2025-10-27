@@ -22,7 +22,7 @@ import {
   Phone,
   Mail,
 } from 'lucide-react'
-import { Button, Input, Card, CardBody, Badge } from '@/shared/components'
+import { Button, Input, Card, CardBody, Badge, PageHeader } from '@/shared/components'
 import { getFirstClinic, updateClinic } from '@/shared/api/clinics.api'
 import { getBusinessHours } from '@/shared/api/business-hours.api'
 import { getAllClosedDates, deleteClosedDate } from '@/shared/api/closed-dates.api'
@@ -219,18 +219,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">클리닉 설정</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                병원 정보 및 운영 설정을 관리합니다
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="클리닉 설정" backTo="/admin/dashboard" />
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200">

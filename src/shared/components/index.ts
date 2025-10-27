@@ -55,3 +55,6 @@ export { ErrorBoundary } from './ErrorBoundary'
 
 // Skeleton
 export { Skeleton, TableSkeleton, CardSkeleton } from './Skeleton'
+
+// Page Header
+export { PageHeader } from './PageHeader'
