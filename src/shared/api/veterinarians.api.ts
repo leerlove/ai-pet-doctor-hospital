@@ -4,9 +4,6 @@
 
 import { supabase } from './supabase'
 
-console.log('📦 [MODULE] veterinarians.api.ts 모듈 로드됨')
-console.log('📦 [MODULE] supabase 클라이언트:', !!supabase)
-
 // Veterinarian types (수동 정의 - database.types.ts에 아직 없음)
 export interface Veterinarian {
   id: string
@@ -89,56 +86,13 @@ export interface VeterinarianWorkingHoursUpdate {
  * 모든 수의사 조회
  */
 export async function getAllVeterinarians(): Promise<Veterinarian[]> {
-  console.log('🔍 [API] getAllVeterinarians 함수 시작')
-  console.log('🔗 [API] Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
-  console.log('🔗 [API] Supabase client exists:', !!supabase)
+  const { data, error } = await supabase
+    .from('veterinarians')
+    .select('*')
+    .order('name')
 
-  try {
-    console.log('📝 [API] 쿼리 빌더 생성 중...')
-
-    // Timeout 추가 (10초)
-    const queryPromise = supabase
-      .from('veterinarians')
-      .select('*')
-      .order('name')
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('쿼리 타임아웃 (10초 초과)')), 10000)
-    )
-
-    console.log('⏱️ [API] 쿼리 실행 중... (10초 타임아웃)')
-
-    const { data, error } = await Promise.race([
-      queryPromise,
-      timeoutPromise
-    ]) as any
-
-    console.log('📡 [API] 쿼리 완료')
-    console.log('📊 [API] 응답 데이터:', {
-      hasData: !!data,
-      dataLength: data?.length,
-      hasError: !!error,
-      errorDetails: error
-    })
-
-    if (error) {
-      console.error('❌ [API] Supabase 에러:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      })
-      throw error
-    }
-
-    console.log('✅ [API] 수의사 조회 성공:', data?.length || 0, '명')
-    console.log('👥 [API] 조회된 수의사:', data)
-
-    return data || []
-  } catch (err) {
-    console.error('💥 [API] getAllVeterinarians 예외:', err)
-    throw err
-  }
+  if (error) throw error
+  return data || []
 }
 
 /**

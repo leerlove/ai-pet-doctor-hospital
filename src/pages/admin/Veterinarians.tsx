@@ -33,7 +33,6 @@ import {
 import { VeterinarianFormModal } from '@/features/veterinarian/components/VeterinarianFormModal'
 import { WorkingHoursModal } from '@/features/veterinarian/components/WorkingHoursModal'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { supabase } from '@/shared/api/supabase'
 
 export default function Veterinarians() {
   const { profile } = useAuth()
@@ -49,51 +48,12 @@ export default function Veterinarians() {
   }, [])
 
   async function loadVeterinarians() {
-    console.log('🚀 [PAGE] loadVeterinarians 호출됨')
-
     try {
       setIsLoading(true)
-      console.log('⏳ [PAGE] isLoading = true 설정')
-
-      // 🧪 비교 테스트: clinics 테이블 조회 (다른 테이블이 잘 작동하는지 확인)
-      console.log('🧪 [TEST] clinics 테이블 조회 시도...')
-      const { data: testClinics, error: testError } = await supabase
-        .from('clinics')
-        .select('*')
-        .limit(1)
-      console.log('🧪 [TEST] clinics 조회 결과:', {
-        success: !testError,
-        hasData: !!testClinics,
-        dataLength: testClinics?.length,
-        error: testError
-      })
-
-      console.log('📞 [PAGE] getAllVeterinarians() 호출 전...')
-      console.log('🔍 [PAGE] getAllVeterinarians 함수 타입:', typeof getAllVeterinarians)
-      console.log('🔍 [PAGE] getAllVeterinarians 함수 존재:', !!getAllVeterinarians)
-
       const data = await getAllVeterinarians()
-
-      console.log('✅ [PAGE] getAllVeterinarians() 응답 받음:', {
-        dataType: typeof data,
-        isArray: Array.isArray(data),
-        length: data?.length,
-        firstItem: data?.[0]
-      })
-
       setVeterinarians(data)
-      console.log('💾 [PAGE] setVeterinarians 완료')
-
     } catch (error: any) {
-      console.error('❌ [PAGE] 수의사 조회 실패:', error)
-      console.error('🔍 [PAGE] 에러 상세:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack
-      })
-
+      console.error('❌ 수의사 조회 실패:', error)
       showToast({
         title: '수의사 조회 실패',
         description: error.message || '알 수 없는 오류가 발생했습니다.',
@@ -101,7 +61,6 @@ export default function Veterinarians() {
       })
     } finally {
       setIsLoading(false)
-      console.log('🏁 [PAGE] isLoading = false 설정, loadVeterinarians 완료')
     }
   }
 
