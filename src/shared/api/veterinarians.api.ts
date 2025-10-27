@@ -87,19 +87,33 @@ export interface VeterinarianWorkingHoursUpdate {
  */
 export async function getAllVeterinarians(): Promise<Veterinarian[]> {
   console.log('🔍 getAllVeterinarians 호출')
-  const { data, error } = await supabase
-    .from('veterinarians')
-    .select('*')
-    .order('name')
+  console.log('📡 Supabase 쿼리 시작...')
 
-  if (error) {
-    console.error('❌ 수의사 조회 실패:', error)
-    throw error
+  try {
+    const { data, error } = await supabase
+      .from('veterinarians')
+      .select('*')
+      .order('name')
+
+    console.log('📡 Supabase 쿼리 응답 받음')
+    console.log('에러:', error)
+    console.log('데이터:', data)
+
+    if (error) {
+      console.error('❌ 수의사 조회 실패:', error)
+      console.error('에러 코드:', error.code)
+      console.error('에러 메시지:', error.message)
+      console.error('에러 상세:', error.details)
+      console.error('에러 힌트:', error.hint)
+      throw error
+    }
+
+    console.log('✅ 수의사 조회 성공:', data?.length, '명')
+    return data || []
+  } catch (err) {
+    console.error('💥 getAllVeterinarians 예외 발생:', err)
+    throw err
   }
-
-  console.log('✅ 수의사 조회 성공:', data?.length, '명')
-  console.log('데이터:', data)
-  return data || []
 }
 
 /**
