@@ -54,6 +54,8 @@ export default function Veterinarians() {
       setIsLoading(true)
       console.log('⏳ [PAGE] isLoading = true 설정')
       console.log('📞 [PAGE] getAllVeterinarians() 호출 전...')
+      console.log('🔍 [PAGE] getAllVeterinarians 함수 타입:', typeof getAllVeterinarians)
+      console.log('🔍 [PAGE] getAllVeterinarians 함수 존재:', !!getAllVeterinarians)
 
       const data = await getAllVeterinarians()
 

@@ -4,6 +4,9 @@
 
 import { supabase } from './supabase'
 
+console.log('📦 [MODULE] veterinarians.api.ts 모듈 로드됨')
+console.log('📦 [MODULE] supabase 클라이언트:', !!supabase)
+
 // Veterinarian types (수동 정의 - database.types.ts에 아직 없음)
 export interface Veterinarian {
   id: string
