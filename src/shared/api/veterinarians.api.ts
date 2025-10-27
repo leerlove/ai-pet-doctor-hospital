@@ -86,38 +86,42 @@ export interface VeterinarianWorkingHoursUpdate {
  * 모든 수의사 조회
  */
 export async function getAllVeterinarians(): Promise<Veterinarian[]> {
-  console.log('🔍 getAllVeterinarians 호출')
-  console.log('Supabase 클라이언트:', supabase)
-  console.log('Supabase URL:', supabase.supabaseUrl)
-
-  console.log('📡 Supabase 쿼리 시작...')
+  console.log('🔍 [API] getAllVeterinarians 함수 시작')
+  console.log('🔗 [API] Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
+  console.log('🔗 [API] Supabase client exists:', !!supabase)
 
   try {
-    console.log('쿼리 생성 중...')
-    const query = supabase
+    console.log('📝 [API] 쿼리 빌더 생성 중...')
+
+    const { data, error } = await supabase
       .from('veterinarians')
       .select('*')
       .order('name')
 
-    console.log('쿼리 객체:', query)
-    console.log('쿼리 실행 중...')
+    console.log('📡 [API] 쿼리 완료')
+    console.log('📊 [API] 응답 데이터:', {
+      hasData: !!data,
+      dataLength: data?.length,
+      hasError: !!error,
+      errorDetails: error
+    })
 
-    const result = await query
-
-    console.log('📡 Supabase 쿼리 응답 받음')
-    console.log('결과 전체:', result)
-    console.log('에러:', result.error)
-    console.log('데이터:', result.data)
-
-    if (result.error) {
-      console.error('❌ 수의사 조회 실패:', result.error)
-      throw result.error
+    if (error) {
+      console.error('❌ [API] Supabase 에러:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      })
+      throw error
     }
 
-    console.log('✅ 수의사 조회 성공:', result.data?.length, '명')
-    return result.data || []
+    console.log('✅ [API] 수의사 조회 성공:', data?.length || 0, '명')
+    console.log('👥 [API] 조회된 수의사:', data)
+
+    return data || []
   } catch (err) {
-    console.error('💥 getAllVeterinarians 예외 발생:', err)
+    console.error('💥 [API] getAllVeterinarians 예외:', err)
     throw err
   }
 }

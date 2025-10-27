@@ -48,20 +48,35 @@ export default function Veterinarians() {
   }, [])
 
   async function loadVeterinarians() {
+    console.log('🚀 [PAGE] loadVeterinarians 호출됨')
+
     try {
       setIsLoading(true)
-      console.log('📋 수의사 목록 조회 시작...')
+      console.log('⏳ [PAGE] isLoading = true 설정')
+      console.log('📞 [PAGE] getAllVeterinarians() 호출 전...')
+
       const data = await getAllVeterinarians()
-      console.log('📋 조회 완료:', data)
+
+      console.log('✅ [PAGE] getAllVeterinarians() 응답 받음:', {
+        dataType: typeof data,
+        isArray: Array.isArray(data),
+        length: data?.length,
+        firstItem: data?.[0]
+      })
+
       setVeterinarians(data)
+      console.log('💾 [PAGE] setVeterinarians 완료')
+
     } catch (error: any) {
-      console.error('❌ 수의사 조회 실패:', error)
-      console.error('에러 상세:', {
+      console.error('❌ [PAGE] 수의사 조회 실패:', error)
+      console.error('🔍 [PAGE] 에러 상세:', {
         message: error.message,
         code: error.code,
         details: error.details,
         hint: error.hint,
+        stack: error.stack
       })
+
       showToast({
         title: '수의사 조회 실패',
         description: error.message || '알 수 없는 오류가 발생했습니다.',
@@ -69,6 +84,7 @@ export default function Veterinarians() {
       })
     } finally {
       setIsLoading(false)
+      console.log('🏁 [PAGE] isLoading = false 설정, loadVeterinarians 완료')
     }
   }
 
