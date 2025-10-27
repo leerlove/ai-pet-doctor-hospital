@@ -33,6 +33,7 @@ import {
 import { VeterinarianFormModal } from '@/features/veterinarian/components/VeterinarianFormModal'
 import { WorkingHoursModal } from '@/features/veterinarian/components/WorkingHoursModal'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { supabase } from '@/shared/api/supabase'
 
 export default function Veterinarians() {
   const { profile } = useAuth()
@@ -53,6 +54,20 @@ export default function Veterinarians() {
     try {
       setIsLoading(true)
       console.log('⏳ [PAGE] isLoading = true 설정')
+
+      // 🧪 비교 테스트: clinics 테이블 조회 (다른 테이블이 잘 작동하는지 확인)
+      console.log('🧪 [TEST] clinics 테이블 조회 시도...')
+      const { data: testClinics, error: testError } = await supabase
+        .from('clinics')
+        .select('*')
+        .limit(1)
+      console.log('🧪 [TEST] clinics 조회 결과:', {
+        success: !testError,
+        hasData: !!testClinics,
+        dataLength: testClinics?.length,
+        error: testError
+      })
+
       console.log('📞 [PAGE] getAllVeterinarians() 호출 전...')
       console.log('🔍 [PAGE] getAllVeterinarians 함수 타입:', typeof getAllVeterinarians)
       console.log('🔍 [PAGE] getAllVeterinarians 함수 존재:', !!getAllVeterinarians)
