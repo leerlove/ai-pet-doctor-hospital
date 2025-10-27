@@ -59,6 +59,24 @@ export async function getClinicById(id: string): Promise<Clinic | null> {
   return data
 }
 
+/**
+ * 첫 번째 클리닉 조회 (단일 클리닉 운영 시)
+ */
+export async function getFirstClinic(): Promise<Clinic | null> {
+  const { data, error } = await supabase
+    .from('clinics')
+    .select('*')
+    .limit(1)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw error
+  }
+
+  return data
+}
+
 // ============================================================================
 // 생성 (Create)
 // ============================================================================

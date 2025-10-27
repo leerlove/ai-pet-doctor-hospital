@@ -23,7 +23,7 @@ import {
   Mail,
 } from 'lucide-react'
 import { Button, Input, Card, CardBody, Badge } from '@/shared/components'
-import { getClinicById, updateClinic } from '@/shared/api/clinics.api'
+import { getFirstClinic, updateClinic } from '@/shared/api/clinics.api'
 import { showToast } from '@/shared/components/Toast'
 import type { Clinic } from '@/shared/types/database.types'
 
@@ -64,8 +64,8 @@ export default function Settings() {
   const loadClinicData = async () => {
     try {
       setIsLoading(true)
-      // TODO: 실제 클리닉 ID 사용
-      const data = await getClinicById('00000000-0000-0000-0000-000000000001')
+      // 첫 번째 클리닉 가져오기 (단일 클리닉 운영)
+      const data = await getFirstClinic()
 
       if (!data) {
         throw new Error('클리닉 정보를 찾을 수 없습니다')
@@ -383,7 +383,11 @@ export default function Settings() {
               </div>
 
               <div className="mb-6">
-                <Button variant="primary" size="sm">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => showToast({ title: '준비 중', description: '휴무일 추가 기능은 준비 중입니다', variant: 'info' })}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   휴무일 추가
                 </Button>
@@ -428,7 +432,11 @@ export default function Settings() {
               </div>
 
               <div className="mb-6">
-                <Button variant="primary" size="sm">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => showToast({ title: '준비 중', description: '서비스 추가 기능은 준비 중입니다', variant: 'info' })}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   서비스 추가
                 </Button>

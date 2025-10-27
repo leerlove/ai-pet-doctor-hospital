@@ -52,25 +52,42 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
-                  <Link
-                    to="/booking"
-                    className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium shadow-sm"
-                  >
-                    예약하기
-                  </Link>
-                  <Link
-                    to="/my-bookings"
-                    className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-                  >
-                    내 예약
-                  </Link>
-                  {profile?.role === 'admin' && (
-                    <Link
-                      to="/admin/dashboard"
-                      className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-                    >
-                      관리자
-                    </Link>
+                  {profile?.role === 'admin' ? (
+                    <>
+                      <Link
+                        to="/admin/dashboard"
+                        className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+                      >
+                        대시보드
+                      </Link>
+                      <Link
+                        to="/admin/bookings"
+                        className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+                      >
+                        예약 관리
+                      </Link>
+                      <Link
+                        to="/admin/settings"
+                        className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium shadow-sm"
+                      >
+                        클리닉 설정
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/booking"
+                        className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium shadow-sm"
+                      >
+                        예약하기
+                      </Link>
+                      <Link
+                        to="/my-bookings"
+                        className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+                      >
+                        내 예약
+                      </Link>
+                    </>
                   )}
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-50 rounded-lg border border-teal-200">
                     <User className="w-4 h-4 text-teal-600" />
