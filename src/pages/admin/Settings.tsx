@@ -24,8 +24,12 @@ import {
 } from 'lucide-react'
 import { Button, Input, Card, CardBody, Badge } from '@/shared/components'
 import { getFirstClinic, updateClinic } from '@/shared/api/clinics.api'
+import { getBusinessHours } from '@/shared/api/business-hours.api'
+import { getAllClosedDates, deleteClosedDate } from '@/shared/api/closed-dates.api'
+import { getAllServices, deleteService } from '@/shared/api/services.api'
+import { BusinessHoursEditor, ClosedDateModal, ServiceModal } from '@/features/clinic/components'
 import { showToast } from '@/shared/components/Toast'
-import type { Clinic } from '@/shared/types/database.types'
+import type { Clinic, BusinessHour, ClosedDate, Service } from '@/shared/types/database.types'
 
 // Validation Schema
 const clinicInfoSchema = z.object({
@@ -42,8 +46,14 @@ type ClinicInfoForm = z.infer<typeof clinicInfoSchema>
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'info' | 'hours' | 'holidays' | 'services'>('info')
   const [clinic, setClinic] = useState<Clinic | null>(null)
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
+  const [closedDates, setClosedDates] = useState<ClosedDate[]>([])
+  const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isClosedDateModalOpen, setIsClosedDateModalOpen] = useState(false)
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
 
   const clinicForm = useForm<ClinicInfoForm>({
     resolver: zodResolver(clinicInfoSchema),
@@ -82,6 +92,18 @@ export default function Settings() {
         phone_2: data.phone_2 || '',
         email: data.email || '',
       })
+
+      // 영업시간 로드
+      const hours = await getBusinessHours(data.id)
+      setBusinessHours(hours)
+
+      // 휴무일 로드
+      const dates = await getAllClosedDates(data.id)
+      setClosedDates(dates)
+
+      // 서비스 로드
+      const servicesData = await getAllServices()
+      setServices(servicesData)
     } catch (error) {
       console.error('클리닉 정보 로드 실패:', error)
       showToast({
@@ -124,6 +146,62 @@ export default function Settings() {
       })
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDeleteClosedDate = async (id: string, date: string) => {
+    if (!confirm(`${date} 휴무일을 삭제하시겠습니까?`)) {
+      return
+    }
+
+    try {
+      await deleteClosedDate(id)
+      showToast({
+        title: '휴무일 삭제 완료',
+        description: '휴무일이 성공적으로 삭제되었습니다',
+        variant: 'success',
+      })
+      loadClinicData()
+    } catch (error) {
+      console.error('휴무일 삭제 실패:', error)
+      showToast({
+        title: '삭제 실패',
+        description: '휴무일 삭제 중 오류가 발생했습니다',
+        variant: 'error',
+      })
+    }
+  }
+
+  const handleAddService = () => {
+    setEditingService(null)
+    setIsServiceModalOpen(true)
+  }
+
+  const handleEditService = (service: Service) => {
+    setEditingService(service)
+    setIsServiceModalOpen(true)
+  }
+
+  const handleDeleteService = async (id: string, name: string) => {
+    if (!confirm(`"${name}" 서비스를 삭제하시겠습니까?`)) {
+      return
+    }
+
+    try {
+      await deleteService(id)
+      showToast({
+        title: '서비스 삭제 완료',
+        description: '서비스가 성공적으로 삭제되었습니다',
+        variant: 'success',
+      })
+      loadClinicData()
+    } catch (error) {
+      console.error('서비스 삭제 실패:', error)
+      showToast({
+        title: '삭제 실패',
+        description: '서비스 삭제 중 오류가 발생했습니다',
+        variant: 'error',
+      })
     }
   }
 
@@ -330,45 +408,18 @@ export default function Settings() {
                 </p>
               </div>
 
-              <div className="space-y-4">
-                {['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'].map(
-                  (day) => (
-                    <div
-                      key={day}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="font-medium text-gray-900 w-20">{day}</span>
-                        <label className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded" defaultChecked />
-                          <span className="text-sm text-gray-600">영업</span>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="time"
-                          defaultValue="09:00"
-                          className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        />
-                        <span className="text-gray-500">~</span>
-                        <input
-                          type="time"
-                          defaultValue="18:00"
-                          className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        />
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-
-              <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
-                <Button variant="primary" size="md">
-                  <Save className="w-4 h-4 mr-2" />
-                  저장하기
-                </Button>
-              </div>
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-500">로딩 중...</div>
+              ) : businessHours.length > 0 ? (
+                <BusinessHoursEditor
+                  businessHours={businessHours}
+                  onUpdate={loadClinicData}
+                />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  영업시간 정보가 없습니다.
+                </div>
+              )}
             </CardBody>
           </Card>
         )}
@@ -386,38 +437,55 @@ export default function Settings() {
                 <Button
                   variant="primary"
                   size="md"
-                  onClick={() => showToast({ title: '준비 중', description: '휴무일 추가 기능은 준비 중입니다', variant: 'info' })}
+                  onClick={() => setIsClosedDateModalOpen(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   휴무일 추가
                 </Button>
               </div>
 
-              <div className="space-y-3">
-                {[
-                  { date: '2025-01-01', reason: '신정' },
-                  { date: '2025-02-09', reason: '설날 연휴' },
-                  { date: '2025-02-10', reason: '설날' },
-                ].map((holiday, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Calendar className="w-5 h-5 text-gray-400" />
-                      <div>
-                        <p className="font-medium text-gray-900">{holiday.date}</p>
-                        <p className="text-sm text-gray-500">{holiday.reason}</p>
+              {closedDates.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">등록된 휴무일이 없습니다</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {closedDates.map((closedDate) => (
+                    <div
+                      key={closedDate.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Calendar className="w-5 h-5 text-teal-600" />
+                        <div>
+                          <p className="font-medium text-gray-900">{closedDate.date}</p>
+                          <p className="text-sm text-gray-500">{closedDate.reason}</p>
+                        </div>
                       </div>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDeleteClosedDate(closedDate.id, closedDate.date)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Button variant="danger" size="sm">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardBody>
           </Card>
+        )}
+
+        {/* 휴무일 추가 모달 */}
+        {clinic && (
+          <ClosedDateModal
+            isOpen={isClosedDateModalOpen}
+            onClose={() => setIsClosedDateModalOpen(false)}
+            onSuccess={loadClinicData}
+            clinicId={clinic.id}
+          />
         )}
 
         {/* 서비스 관리 탭 */}
@@ -435,53 +503,80 @@ export default function Settings() {
                 <Button
                   variant="primary"
                   size="md"
-                  onClick={() => showToast({ title: '준비 중', description: '서비스 추가 기능은 준비 중입니다', variant: 'info' })}
+                  onClick={handleAddService}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   서비스 추가
                 </Button>
               </div>
 
-              <div className="space-y-3">
-                {[
-                  { name: '일반 진료', duration: 30, price: 30000, active: true },
-                  { name: '예방 접종', duration: 15, price: 50000, active: true },
-                  { name: '건강 검진', duration: 60, price: 100000, active: true },
-                  { name: '치과 진료', duration: 45, price: 80000, active: false },
-                ].map((service, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Stethoscope className="w-5 h-5 text-teal-600" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">{service.name}</p>
-                          {service.active ? (
-                            <Badge variant="success">운영중</Badge>
-                          ) : (
-                            <Badge variant="default">중지</Badge>
+              {services.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">등록된 서비스가 없습니다</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Stethoscope className="w-5 h-5 text-teal-600" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-gray-900">{service.name}</p>
+                            {service.is_active ? (
+                              <Badge variant="success">운영중</Badge>
+                            ) : (
+                              <Badge variant="default">중지</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            소요시간: {service.duration_minutes}분 · 가격: {(service.price || 0).toLocaleString()}원
+                          </p>
+                          {service.description && (
+                            <p className="text-sm text-gray-400 mt-1">{service.description}</p>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">
-                          소요시간: {service.duration}분 · 가격: {service.price.toLocaleString()}원
-                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditService(service)}
+                        >
+                          수정
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDeleteService(service.id, service.name)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        수정
-                      </Button>
-                      <Button variant="danger" size="sm">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardBody>
           </Card>
+        )}
+
+        {/* 서비스 추가/수정 모달 */}
+        {clinic && (
+          <ServiceModal
+            isOpen={isServiceModalOpen}
+            onClose={() => {
+              setIsServiceModalOpen(false)
+              setEditingService(null)
+            }}
+            onSuccess={loadClinicData}
+            clinicId={clinic.id}
+            editingService={editingService}
+          />
         )}
       </main>
     </div>
