@@ -50,6 +50,38 @@ export interface VeterinarianUpdate {
   updated_at?: string | null
 }
 
+export interface VeterinarianWorkingHours {
+  id: string
+  veterinarian_id: string
+  day_of_week: number // 0: 일요일, 6: 토요일
+  is_working: boolean | null
+  start_time: string | null // HH:mm
+  end_time: string | null // HH:mm
+  break_start: string | null // HH:mm
+  break_end: string | null // HH:mm
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface VeterinarianWorkingHoursInsert {
+  id?: string
+  veterinarian_id: string
+  day_of_week: number
+  is_working?: boolean | null
+  start_time?: string | null
+  end_time?: string | null
+  break_start?: string | null
+  break_end?: string | null
+}
+
+export interface VeterinarianWorkingHoursUpdate {
+  is_working?: boolean | null
+  start_time?: string | null
+  end_time?: string | null
+  break_start?: string | null
+  break_end?: string | null
+}
+
 /**
  * 모든 수의사 조회
  */
@@ -193,4 +225,69 @@ export async function getAvailableVeterinarians(
   console.log('🔍 [수의사 조회] 완료 ---')
 
   return availableVets
+}
+
+// ============================================================================
+// 수의사 근무 시간 관련
+// ============================================================================
+
+/**
+ * 수의사의 근무 시간 조회
+ */
+export async function getVeterinarianWorkingHours(
+  veterinarianId: string
+): Promise<VeterinarianWorkingHours[]> {
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .select('*')
+    .eq('veterinarian_id', veterinarianId)
+    .order('day_of_week')
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * 수의사 근무 시간 일괄 업데이트
+ */
+export async function updateVeterinarianWorkingHours(
+  veterinarianId: string,
+  workingHours: VeterinarianWorkingHoursInsert[]
+): Promise<VeterinarianWorkingHours[]> {
+  // 기존 근무 시간 삭제
+  const { error: deleteError } = await supabase
+    .from('veterinarian_working_hours')
+    .delete()
+    .eq('veterinarian_id', veterinarianId)
+
+  if (deleteError) throw deleteError
+
+  // 새 근무 시간 삽입
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .insert(workingHours)
+    .select()
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * 특정 요일의 근무 시간 업데이트
+ */
+export async function updateWorkingHoursByDay(
+  veterinarianId: string,
+  dayOfWeek: number,
+  updates: VeterinarianWorkingHoursUpdate
+): Promise<VeterinarianWorkingHours> {
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .update(updates)
+    .eq('veterinarian_id', veterinarianId)
+    .eq('day_of_week', dayOfWeek)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
 }

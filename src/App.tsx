@@ -20,6 +20,7 @@ import MyBookings from '@/pages/MyBookings'
 import Dashboard from '@/pages/admin/Dashboard'
 import Bookings from '@/pages/admin/Bookings'
 import Settings from '@/pages/admin/Settings'
+import Veterinarians from '@/pages/admin/Veterinarians'
 
 // Design Concepts
 import DesignConcepts from '@/pages/DesignConcepts'
@@ -90,6 +91,14 @@ function App() {
           element={
             <ProtectedRoute requireAdmin>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/veterinarians"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Veterinarians />
             </ProtectedRoute>
           }
         />

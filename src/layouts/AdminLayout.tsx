@@ -20,6 +20,7 @@ export function AdminLayout() {
   const navItems = [
     { path: '/admin/dashboard', label: '대시보드' },
     { path: '/admin/bookings', label: '예약 관리' },
+    { path: '/admin/veterinarians', label: '수의사 관리' },
     { path: '/admin/services', label: '서비스 관리' },
     { path: '/admin/settings', label: '설정' },
   ]
