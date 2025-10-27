@@ -10,6 +10,8 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { getBookingsByUserId } from '@/shared/api/bookings.api'
 import { Badge, Button, Card, CardBody } from '@/shared/components'
+import { BookingDetailModal } from '@/features/booking/components'
+import { useBookingActions } from '@/features/booking/hooks/useBookingActions'
 import type { Database } from '@/shared/types/database.types'
 import {
   Calendar,
@@ -31,8 +33,11 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTab, setSelectedTab] = useState<'all' | 'upcoming' | 'past'>('all')
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   const user = useAuthStore((state) => state.user)
+  const { cancelBooking } = useBookingActions()
 
   useEffect(() => {
     if (user) {
@@ -70,6 +75,28 @@ export default function MyBookings() {
   }
 
   const filteredBookings = getFilteredBookings()
+
+  const handleViewDetails = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleCancelBooking = async (booking: Booking) => {
+    if (!window.confirm('정말 예약을 취소하시겠습니까?')) {
+      return
+    }
+
+    const success = await cancelBooking(booking.id)
+    if (success) {
+      setIsDetailModalOpen(false)
+      loadBookings() // 목록 새로고침
+    }
+  }
+
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false)
+    setSelectedBooking(null)
+  }
 
   const getStatusBadge = (status: BookingStatus) => {
     const variants: Record<BookingStatus, 'pending' | 'confirmed' | 'cancelled' | 'completed'> = {
@@ -358,16 +385,24 @@ export default function MyBookings() {
                     </div>
 
                     {/* Actions */}
-                    {booking.status === 'confirmed' && (
-                      <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-3">
-                        <Button variant="secondary" size="sm">
-                          예약 변경 요청
-                        </Button>
-                        <Button variant="danger" size="sm">
+                    <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(booking)}
+                      >
+                        상세보기
+                      </Button>
+                      {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleCancelBooking(booking)}
+                        >
                           예약 취소
                         </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardBody>
                 </Card>
               )
@@ -375,6 +410,15 @@ export default function MyBookings() {
           </div>
         )}
       </main>
+
+      {/* Booking Detail Modal */}
+      <BookingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        booking={selectedBooking}
+        onCancel={handleCancelBooking}
+        isAdmin={false}
+      />
     </div>
   )
 }

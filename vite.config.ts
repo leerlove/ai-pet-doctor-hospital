@@ -21,6 +21,8 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5175,
+    strictPort: true, // 포트가 사용 중이면 에러 발생
+    open: true, // 브라우저 자동 열기
   },
 })

@@ -6,7 +6,6 @@
  * - 스택형 표시
  */
 
-import { useEffect } from 'react'
 import { create } from 'zustand'
 import { cn } from '@/shared/utils/cn'
 
@@ -61,6 +60,23 @@ export const toast = {
   info: (title: string, message?: string, duration?: number) => {
     useToastStore.getState().addToast({ type: 'info', title, message, duration })
   },
+}
+
+// showToast helper function (alternative API)
+export interface ShowToastOptions {
+  title: string
+  description?: string
+  variant?: 'success' | 'error' | 'warning' | 'info'
+  duration?: number
+}
+
+export function showToast({ title, description, variant = 'info', duration }: ShowToastOptions) {
+  useToastStore.getState().addToast({
+    type: variant,
+    title,
+    message: description,
+    duration,
+  })
 }
 
 // Toast Container Component

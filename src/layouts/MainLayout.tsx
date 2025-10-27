@@ -6,17 +6,12 @@
 
 import { Link, Outlet } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useLogout } from '@/shared/hooks/useLogout'
+import { User, LogOut } from 'lucide-react'
 
 export function MainLayout() {
-  const { isAuthenticated, profile, logout } = useAuth()
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('로그아웃 실패:', error)
-    }
-  }
+  const { isAuthenticated, profile } = useAuth()
+  const { handleLogout, isLoggingOut } = useLogout()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -37,7 +32,7 @@ export function MainLayout() {
                 <>
                   <Link
                     to="/booking"
-                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                    className="bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors"
                   >
                     예약하기
                   </Link>
@@ -55,14 +50,21 @@ export function MainLayout() {
                       관리자
                     </Link>
                   )}
-                  <span className="text-sm text-gray-600">
-                    {profile?.full_name || profile?.email}
-                  </span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 rounded-md border border-primary-200">
+                    <User className="w-4 h-4 text-primary-600" />
+                    <span className="text-sm font-medium text-primary-700">
+                      {profile?.role === 'admin'
+                        ? `${profile?.full_name || profile?.email || 'admin'} 관리자님`
+                        : `${profile?.full_name || profile?.email || '사용자'} 보호자님`}
+                    </span>
+                  </div>
                   <button
                     onClick={handleLogout}
-                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    로그아웃
+                    <LogOut className="w-4 h-4" />
+                    <span>{isLoggingOut ? '로그아웃 중...' : '로그아웃'}</span>
                   </button>
                 </>
               ) : (
@@ -75,7 +77,7 @@ export function MainLayout() {
                   </Link>
                   <Link
                     to="/signup"
-                    className="bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 rounded-md text-sm font-medium"
+                    className="bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors"
                   >
                     회원가입
                   </Link>

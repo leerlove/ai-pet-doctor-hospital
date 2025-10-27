@@ -16,6 +16,7 @@ import {
   getSession,
   getCurrentUser,
 } from '../api/auth.api'
+import { clearAuthCache, isSessionValid } from '@/shared/utils/auth-cache'
 
 export function useAuth() {
   const {
@@ -40,18 +41,29 @@ export function useAuth() {
       setLoading(true)
       setError(null)
 
+      // Supabase 세션 확인
       const session = await getSession()
       if (!session) {
+        console.log('세션이 없습니다. 로그아웃 상태로 설정합니다.')
+        reset()
+        return
+      }
+
+      // 세션이 만료되었는지 확인
+      if (!isSessionValid(session)) {
+        console.log('세션이 만료되었습니다. 로그아웃 상태로 설정합니다.')
         reset()
         return
       }
 
       const user = await getCurrentUser()
       if (!user) {
+        console.log('사용자 정보를 가져올 수 없습니다. 로그아웃 상태로 설정합니다.')
         reset()
         return
       }
 
+      console.log('세션 초기화 성공:', { userId: user.id, email: user.email })
       setSession(session)
       setUser(user)
 
@@ -102,7 +114,7 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [initializeAuth, setSession, setUser, setProfile, reset])
+  }, [initializeAuth, setSession, setUser, setProfile, reset]) // 필요한 의존성 추가
 
   /**
    * 로그인
@@ -186,11 +198,23 @@ export function useAuth() {
       setLoading(true)
       setError(null)
 
+      console.log('로그아웃 시작...')
+      
+      // Supabase 로그아웃
       await signOut()
+      
+      // Zustand store 초기화
       reset()
+      
+      // 모든 인증 관련 캐시 정리
+      clearAuthCache()
+      
+      console.log('로그아웃 완료')
     } catch (error: any) {
       console.error('로그아웃 실패:', error)
       setError(error.message)
+      // 에러가 발생해도 로컬 상태는 정리
+      reset()
       throw error
     } finally {
       setLoading(false)

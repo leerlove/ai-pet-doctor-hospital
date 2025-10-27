@@ -8,7 +8,13 @@
       "Bash(pnpm typecheck)",
       "Bash(pnpm add -D @tailwindcss/postcss)",
       "Bash(pnpm dev)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(cat:*)",
+      "Bash(taskkill //F //PID 10020)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

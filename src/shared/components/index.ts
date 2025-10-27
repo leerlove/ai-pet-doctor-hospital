@@ -49,3 +49,6 @@ export type { Toast } from './Toast'
 
 // Protected Route
 export { ProtectedRoute } from './ProtectedRoute'
+
+// Error Boundary
+export { ErrorBoundary } from './ErrorBoundary'

@@ -5,7 +5,8 @@
  */
 
 import { Link } from 'react-router-dom'
-import { useIsAuthenticated } from '@/features/auth/stores/authStore'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useLogout } from '@/shared/hooks/useLogout'
 import {
   Calendar,
   Clock,
@@ -15,10 +16,18 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle,
+  User,
+  LogOut,
 } from 'lucide-react'
 
 export default function Home() {
-  const isAuthenticated = useIsAuthenticated()
+  const { isAuthenticated, profile } = useAuth()
+  const { handleLogout, isLoggingOut } = useLogout()
+
+  const handleLogoutClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    await handleLogout()
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50">
@@ -37,7 +46,7 @@ export default function Home() {
                 <>
                   <Link
                     to="/booking"
-                    className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+                    className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium shadow-sm"
                   >
                     예약하기
                   </Link>
@@ -47,12 +56,30 @@ export default function Home() {
                   >
                     내 예약
                   </Link>
-                  <Link
-                    to="/admin/dashboard"
-                    className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium"
+                  {profile?.role === 'admin' && (
+                    <Link
+                      to="/admin/dashboard"
+                      className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+                    >
+                      관리자
+                    </Link>
+                  )}
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-50 rounded-lg border border-teal-200">
+                    <User className="w-4 h-4 text-teal-600" />
+                    <span className="text-sm font-medium text-teal-700">
+                      {profile?.role === 'admin'
+                        ? `${profile?.full_name || profile?.email || 'admin'} 관리자님`
+                        : `${profile?.full_name || profile?.email || '사용자'} 보호자님`}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogoutClick}
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    관리자
-                  </Link>
+                    <LogOut className="w-4 h-4" />
+                    <span>{isLoggingOut ? '로그아웃 중...' : '로그아웃'}</span>
+                  </button>
                 </>
               ) : (
                 <>
@@ -64,7 +91,7 @@ export default function Home() {
                   </Link>
                   <Link
                     to="/signup"
-                    className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium"
+                    className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium shadow-sm"
                   >
                     회원가입
                   </Link>

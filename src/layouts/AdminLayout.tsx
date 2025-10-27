@@ -6,18 +6,12 @@
 
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useLogout } from '@/shared/hooks/useLogout'
 
 export function AdminLayout() {
   const location = useLocation()
-  const { profile, logout } = useAuth()
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('로그아웃 실패:', error)
-    }
-  }
+  const { profile } = useAuth()
+  const { handleLogout, isLoggingOut } = useLogout()
 
   const isActive = (path: string) => {
     return location.pathname === path
@@ -74,9 +68,10 @@ export function AdminLayout() {
           <div className="absolute bottom-0 w-64 p-4 border-t">
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+              disabled={isLoggingOut}
+              className="w-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              로그아웃
+              {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
             </button>
           </div>
         </aside>

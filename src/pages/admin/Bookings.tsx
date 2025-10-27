@@ -16,15 +16,16 @@ import {
   type BookingStatus,
   type BookingSource,
 } from '@/features/booking/stores/bookingStore'
-import { getAllBookings, subscribeToBookings } from '@/shared/api/bookings.api'
+import { getAllBookings, subscribeToBookings, updateBooking } from '@/shared/api/bookings.api'
 import { getAllServices } from '@/shared/api/services.api'
 import { Badge, Button, Input } from '@/shared/components'
-import { toast } from '@/shared/components/Toast'
+import { showToast } from '@/shared/components/Toast'
+import { BookingDetailModal } from '@/features/booking/components'
+import type { Booking } from '@/shared/types/database.types'
 import {
   Calendar,
   Search,
   Filter,
-  Plus,
   Clock,
   User,
   Heart,
@@ -33,15 +34,15 @@ import {
 } from 'lucide-react'
 
 export default function Bookings() {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   const filteredBookings = useFilteredBookings()
   const filters = useBookingFilters()
   const stats = useBookingStats()
   const isLoading = useBookingLoading()
 
-  const { setBookings, setFilters, clearFilters, setServices, setLoading, addBooking, updateBooking } =
+  const { setBookings, setFilters, clearFilters, setServices, setLoading, addBooking, updateBooking: updateBookingInStore } =
     useBookingStore()
 
   // Load bookings and services
@@ -54,9 +55,9 @@ export default function Bookings() {
     const channel = subscribeToBookings((payload) => {
       if (payload.eventType === 'INSERT') {
         addBooking(payload.new)
-        toast.success('새 예약', '새로운 예약이 등록되었습니다')
+        showToast({ title: '새 예약', description: '새로운 예약이 등록되었습니다', variant: 'success' })
       } else if (payload.eventType === 'UPDATE') {
-        updateBooking(payload.new.id, payload.new)
+        updateBookingInStore(payload.new.id, payload.new)
       }
     })
 
@@ -76,9 +77,40 @@ export default function Bookings() {
       setServices(servicesData)
     } catch (error) {
       console.error('Failed to load data:', error)
-      toast.error('오류', '데이터를 불러오는데 실패했습니다')
+      showToast({ title: '오류', description: '데이터를 불러오는데 실패했습니다', variant: 'error' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleBookingClick = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleApprove = async (booking: Booking) => {
+    try {
+      await updateBooking(booking.id, { status: 'confirmed' })
+      updateBookingInStore(booking.id, { ...booking, status: 'confirmed' })
+      showToast({ title: '예약 승인', description: '예약이 승인되었습니다', variant: 'success' })
+      setIsDetailModalOpen(false)
+      loadData() // 새로고침
+    } catch (error) {
+      console.error('Failed to approve booking:', error)
+      showToast({ title: '오류', description: '예약 승인에 실패했습니다', variant: 'error' })
+    }
+  }
+
+  const handleReject = async (booking: Booking) => {
+    try {
+      await updateBooking(booking.id, { status: 'cancelled' })
+      updateBookingInStore(booking.id, { ...booking, status: 'cancelled' })
+      showToast({ title: '예약 거절', description: '예약이 취소되었습니다', variant: 'success' })
+      setIsDetailModalOpen(false)
+      loadData() // 새로고침
+    } catch (error) {
+      console.error('Failed to reject booking:', error)
+      showToast({ title: '오류', description: '예약 거절에 실패했습니다', variant: 'error' })
     }
   }
 
@@ -151,13 +183,14 @@ export default function Bookings() {
               >
                 내보내기
               </Button>
-              <Button
+              {/* TODO: 새 예약 모달 구현 */}
+              {/* <Button
                 variant="primary"
                 leftIcon={<Plus className="w-4 h-4" />}
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 새 예약
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -263,9 +296,10 @@ export default function Bookings() {
             <div className="p-12 text-center">
               <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 mb-2">예약이 없습니다</p>
-              <Button variant="primary" size="sm" onClick={() => setIsCreateModalOpen(true)}>
+              {/* TODO: 새 예약 모달 구현 */}
+              {/* <Button variant="primary" size="sm" onClick={() => setIsCreateModalOpen(true)}>
                 첫 예약 등록하기
-              </Button>
+              </Button> */}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -300,7 +334,7 @@ export default function Bookings() {
                     <tr
                       key={booking.id}
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => setSelectedBookingId(booking.id)}
+                      onClick={() => handleBookingClick(booking)}
                     >
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
@@ -358,7 +392,8 @@ export default function Bookings() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            setSelectedBookingId(booking.id)
+                            setSelectedBooking(booking)
+                            setIsDetailModalOpen(true)
                           }}
                         >
                           상세보기
@@ -373,8 +408,20 @@ export default function Bookings() {
         </div>
       </main>
 
-      {/* TODO: Modals */}
-      {/* <BookingDetailModal bookingId={selectedBookingId} onClose={() => setSelectedBookingId(null)} /> */}
+      {/* Booking Detail Modal */}
+      <BookingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false)
+          setSelectedBooking(null)
+        }}
+        booking={selectedBooking}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        isAdmin={true}
+      />
+
+      {/* TODO: Create Modal */}
       {/* <BookingCreateModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} /> */}
     </div>
   )

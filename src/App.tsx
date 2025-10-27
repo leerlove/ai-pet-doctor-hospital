@@ -7,16 +7,19 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { ToastContainer } from '@/shared/components'
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
 
 // Pages
 import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
+import Booking from '@/pages/Booking'
 import MyBookings from '@/pages/MyBookings'
 
 // Admin Pages
 import Dashboard from '@/pages/admin/Dashboard'
 import Bookings from '@/pages/admin/Bookings'
+import Settings from '@/pages/admin/Settings'
 
 // Design Concepts
 import DesignConcepts from '@/pages/DesignConcepts'
@@ -29,9 +32,10 @@ import Concept6_CleanBooking from '@/pages/design-concepts/Concept6_CleanBooking
 
 function App() {
   return (
-    <BrowserRouter>
-      <ToastContainer />
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ToastContainer />
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -51,7 +55,7 @@ function App() {
           path="/booking"
           element={
             <ProtectedRoute>
-              <div className="p-8">예약 페이지 (TODO)</div>
+              <Booking />
             </ProtectedRoute>
           }
         />
@@ -85,7 +89,7 @@ function App() {
           path="/admin/settings"
           element={
             <ProtectedRoute requireAdmin>
-              <div className="p-8">설정 페이지 (TODO)</div>
+              <Settings />
             </ProtectedRoute>
           }
         />
@@ -100,8 +104,9 @@ function App() {
 
         {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 
