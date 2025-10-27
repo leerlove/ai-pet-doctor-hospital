@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "playwright test"
+    "test": "playwright test",
+    "deploy": "vercel --prod --yes",
+    "deploy:preview": "vercel"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
