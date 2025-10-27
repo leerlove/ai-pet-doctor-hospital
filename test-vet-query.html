@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Veterinarians Query</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Veterinarians Query Test</h1>
+  <button onclick="testQuery()">Test Query (Anonymous)</button>
+  <button onclick="testQueryAuth()">Test Query (With Auth)</button>
+  <button onclick="checkRLS()">Check RLS Status</button>
+  <pre id="output"></pre>
+
+  <script>
+    const { createClient } = supabase
+
+    const supabaseClient = createClient(
+      'https://bglwwvjdqvepbblhcqvp.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbHd3dmpkcXZlcGJibGhjcXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc3MzU3MjgsImV4cCI6MjA1MzMxMTcyOH0.oKuTbOy1qWYIbDNcxp9t2q1rWJaVH-Pc7GKEZrQlw-c'
+    )
+
+    async function testQuery() {
+      const output = document.getElementById('output')
+      output.textContent = 'Testing anonymous query...\n'
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('veterinarians')
+          .select('*')
+          .order('name')
+
+        if (error) {
+          output.textContent += '\n❌ Error:\n' + JSON.stringify(error, null, 2)
+        } else {
+          output.textContent += '\n✅ Success! Found ' + data.length + ' veterinarians:\n'
+          output.textContent += JSON.stringify(data, null, 2)
+        }
+      } catch (err) {
+        output.textContent += '\n❌ Exception:\n' + err.message
+      }
+    }
+
+    async function testQueryAuth() {
+      const output = document.getElementById('output')
+      output.textContent = 'Testing authenticated query...\n'
+
+      // First check if we have a session
+      const { data: sessionData } = await supabaseClient.auth.getSession()
+      output.textContent += 'Session: ' + (sessionData.session ? 'EXISTS' : 'NONE') + '\n'
+
+      if (sessionData.session) {
+        output.textContent += 'User: ' + sessionData.session.user.email + '\n\n'
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('veterinarians')
+          .select('*')
+          .order('name')
+
+        if (error) {
+          output.textContent += '\n❌ Error:\n' + JSON.stringify(error, null, 2)
+        } else {
+          output.textContent += '\n✅ Success! Found ' + data.length + ' veterinarians:\n'
+          output.textContent += JSON.stringify(data, null, 2)
+        }
+      } catch (err) {
+        output.textContent += '\n❌ Exception:\n' + err.message
+      }
+    }
+
+    async function checkRLS() {
+      const output = document.getElementById('output')
+      output.textContent = 'Checking RLS status...\n'
+
+      try {
+        // This query checks if RLS is enabled
+        const { data, error } = await supabaseClient.rpc('exec_sql', {
+          query: `
+            SELECT
+              tablename,
+              rowsecurity
+            FROM pg_tables
+            WHERE tablename = 'veterinarians'
+          `
+        })
+
+        if (error) {
+          output.textContent += '\n❌ Error:\n' + JSON.stringify(error, null, 2)
+        } else {
+          output.textContent += '\n✅ Result:\n' + JSON.stringify(data, null, 2)
+        }
+      } catch (err) {
+        output.textContent += '\n❌ Exception:\n' + err.message
+      }
+    }
+  </script>
+</body>
+</html>

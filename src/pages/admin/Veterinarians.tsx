@@ -49,17 +49,29 @@ export default function Veterinarians() {
 
   async function loadVeterinarians() {
     try {
+      console.log('🔄 [Veterinarians Page] 수의사 목록 로딩 시작...')
       setIsLoading(true)
+
       const data = await getAllVeterinarians()
+
+      console.log('✅ [Veterinarians Page] 수의사 목록 로딩 완료:', data.length, '명')
+      console.log('📋 [Veterinarians Page] 수의사 데이터:', data)
+
       setVeterinarians(data)
     } catch (error: any) {
-      console.error('❌ 수의사 조회 실패:', error)
+      console.error('❌ [Veterinarians Page] 수의사 조회 실패:', error)
+      console.error('  - error.message:', error.message)
+      console.error('  - error.code:', error.code)
+      console.error('  - error.details:', error.details)
+      console.error('  - error:', error)
+
       showToast({
         title: '수의사 조회 실패',
         description: error.message || '알 수 없는 오류가 발생했습니다.',
         variant: 'error',
       })
     } finally {
+      console.log('🏁 [Veterinarians Page] 로딩 종료 (isLoading = false)')
       setIsLoading(false)
     }
   }

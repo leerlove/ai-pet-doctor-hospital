@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Veterinarians Direct Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    pre {
+      background: #252526;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      border: 1px solid #3c3c3c;
+    }
+    .success { color: #4ec9b0; }
+    .error { color: #f48771; }
+    .info { color: #9cdcfe; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Veterinarians API 직접 테스트</h1>
+
+  <div>
+    <button onclick="testAnonymous()">1️⃣ 익명 조회 테스트</button>
+    <button onclick="testAuthenticated()">2️⃣ 인증 조회 테스트</button>
+    <button onclick="checkRLS()">3️⃣ RLS 상태 확인</button>
+    <button onclick="clearOutput()">🗑️ 지우기</button>
+  </div>
+
+  <pre id="output">준비 완료. 버튼을 클릭하세요.</pre>
+
+  <script>
+    const { createClient } = supabase
+
+    // Supabase 클라이언트 생성 (올바른 URL과 키 사용)
+    const supabaseClient = createClient(
+      'https://geihrbunznmwppxjhoqj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlaWhyYnVuem5td3BweGpob3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NzIxNjEsImV4cCI6MjA3NjU0ODE2MX0.5GYqFadb8IpDKLbo5jzSFfx6hFBCEOkWtERIW9vN124'
+    )
+
+    const output = document.getElementById('output')
+
+    function log(message, type = 'info') {
+      const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info'
+      output.innerHTML += `<span class="${className}">${message}</span>\n`
+      output.scrollTop = output.scrollHeight
+    }
+
+    function clearOutput() {
+      output.textContent = '출력이 지워졌습니다.\n'
+    }
+
+    // 1️⃣ 익명 조회 테스트
+    async function testAnonymous() {
+      clearOutput()
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      log('🔍 익명 사용자로 veterinarians 조회 테스트')
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+
+      try {
+        const startTime = Date.now()
+
+        log('📤 요청 전송 중...')
+        const { data, error, status, statusText } = await supabaseClient
+          .from('veterinarians')
+          .select('*')
+          .order('name')
+
+        const endTime = Date.now()
+        const duration = endTime - startTime
+
+        log(`⏱️  응답 시간: ${duration}ms\n`)
+
+        if (error) {
+          log('❌ 에러 발생:', 'error')
+          log(`  - message: ${error.message}`, 'error')
+          log(`  - code: ${error.code}`, 'error')
+          log(`  - details: ${error.details}`, 'error')
+          log(`  - hint: ${error.hint}`, 'error')
+          log(`  - status: ${status}`, 'error')
+          log(`  - statusText: ${statusText}`, 'error')
+          log('\n전체 에러 객체:', 'error')
+          log(JSON.stringify(error, null, 2), 'error')
+        } else {
+          log('✅ 조회 성공!', 'success')
+          log(`  - 수의사 수: ${data.length}명\n`, 'success')
+
+          if (data.length > 0) {
+            log('📋 수의사 목록:', 'success')
+            data.forEach((vet, index) => {
+              log(`  ${index + 1}. ${vet.name} (${vet.title || '직책 없음'})`, 'success')
+              log(`     - 전문분야: ${vet.specialization || '없음'}`, 'info')
+              log(`     - 활성화: ${vet.is_active ? '예' : '아니오'}`, 'info')
+            })
+          }
+        }
+      } catch (err) {
+        log('❌ 예외 발생:', 'error')
+        log(err.message, 'error')
+        log(err.stack, 'error')
+      }
+    }
+
+    // 2️⃣ 인증 조회 테스트
+    async function testAuthenticated() {
+      clearOutput()
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      log('🔐 인증된 사용자로 veterinarians 조회 테스트')
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+
+      // 세션 확인
+      const { data: sessionData } = await supabaseClient.auth.getSession()
+
+      if (!sessionData.session) {
+        log('⚠️  로그인되어 있지 않습니다.', 'error')
+        log('   먼저 로그인 페이지에서 로그인하세요.\n')
+        log('   그 다음 이 페이지를 새로고침하고 다시 테스트하세요.')
+        return
+      }
+
+      log('✅ 로그인 상태:', 'success')
+      log(`  - 이메일: ${sessionData.session.user.email}`, 'info')
+      log(`  - 사용자 ID: ${sessionData.session.user.id}`, 'info')
+      log(`  - 역할: ${sessionData.session.user.user_metadata?.role || '알 수 없음'}\n`, 'info')
+
+      try {
+        const startTime = Date.now()
+
+        log('📤 요청 전송 중...')
+        const { data, error, status, statusText } = await supabaseClient
+          .from('veterinarians')
+          .select('*')
+          .order('name')
+
+        const endTime = Date.now()
+        const duration = endTime - startTime
+
+        log(`⏱️  응답 시간: ${duration}ms\n`)
+
+        if (error) {
+          log('❌ 에러 발생:', 'error')
+          log(`  - message: ${error.message}`, 'error')
+          log(`  - code: ${error.code}`, 'error')
+          log(`  - details: ${error.details}`, 'error')
+        } else {
+          log('✅ 조회 성공!', 'success')
+          log(`  - 수의사 수: ${data.length}명`, 'success')
+        }
+      } catch (err) {
+        log('❌ 예외 발생:', 'error')
+        log(err.message, 'error')
+      }
+    }
+
+    // 3️⃣ RLS 상태 확인
+    async function checkRLS() {
+      clearOutput()
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      log('🔒 RLS 정책 상태 확인')
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+
+      log('⚠️  RLS 상태는 Supabase Dashboard에서 확인하세요:', 'info')
+      log('  1. https://supabase.com/dashboard 접속')
+      log('  2. SQL Editor로 이동')
+      log('  3. 다음 쿼리 실행:\n')
+      log('     SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = \'veterinarians\';', 'info')
+      log('     SELECT policyname, cmd, roles FROM pg_policies WHERE tablename = \'veterinarians\';', 'info')
+    }
+
+    // 페이지 로드 시 초기화
+    window.addEventListener('load', () => {
+      log('✅ 테스트 페이지 준비 완료!', 'success')
+      log('   원하는 테스트 버튼을 클릭하세요.\n')
+    })
+  </script>
+</body>
+</html>
