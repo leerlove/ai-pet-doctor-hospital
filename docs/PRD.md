@@ -4,11 +4,15 @@
 ---
 
 ## 📋 문서 정보
-- **버전**: 2.0
+- **버전**: 2.1
+- **최종 업데이트**: 2025-10-27
 - **작성일**: 2025-10-20
 - **프로젝트명**: AI펫닥터 수의과 클리닉 예약 및 관리 시스템
 - **개발 방식**: 완전 재개발 (React 19 + Supabase)
 - **목표**: 현대적이고 성능 최적화된 수의과 예약 관리 시스템 구축
+- **현재 상태**: ✅ Phase 1-4 완료, 프로덕션 배포 완료
+- **프로덕션 URL**: https://ai-pet-doctor-hospital.vercel.app
+- **GitHub**: https://github.com/leerlove/ai-pet-doctor-hospital
 
 ---
 
@@ -2007,13 +2011,15 @@ export function Input({
 - [x] 역할 기반 권한 체크 (admin/customer)
 - [x] 세션 관리 및 자동 로그아웃
 
-#### Week 4: 고객 예약 시스템 🔄
+#### Week 4: 고객 예약 시스템 ✅
 - [x] 랜딩 페이지 구현 (Home.tsx)
 - [x] 내 예약 페이지 (MyBookings.tsx) - 탭 필터, 카드 뷰
-- [ ] 예약 폼 (3단계) - UI 구현 예정
-- [ ] 날짜/시간 선택 컴포넌트
-- [ ] 실시간 가용성 체크
-- [ ] 예약 생성 API 연동
+- [x] 예약 폼 (3단계) - BookingForm.tsx
+- [x] 날짜/시간 선택 컴포넌트 (BookingCalendar, TimeSlotPicker)
+- [x] 실시간 가용성 체크
+- [x] 예약 생성 API 연동
+- [x] 예약 상세/수정/취소 모달 (BookingDetailModal)
+- [x] useBookingActions 훅 구현
 
 #### Week 5: 관리자 대시보드 ✅
 - [x] 관리자 레이아웃 (AdminLayout with sidebar)
@@ -2026,17 +2032,17 @@ export function Input({
 - [x] 검색 및 필터링 기능
 - [x] 실시간 업데이트 (Supabase Realtime)
 - [x] BookingStore with useMemo 최적화
-- [ ] 예약 상세 모달 (구현 예정)
-- [ ] 예약 상태 변경 (구현 예정)
+- [x] 예약 상세 모달 (BookingDetailModal)
+- [x] 예약 상태 변경 (취소, 완료, 노쇼)
 
-### Phase 3: 고급 기능 (1-2주)
+### Phase 3: 고급 기능 (1-2주) ✅
 
-#### Week 6: 클리닉 설정
-- [ ] 클리닉 정보 수정
-- [ ] 영업시간 설정
-- [ ] 휴무일 관리
-- [ ] 서비스 관리
-- [ ] 이미지 업로드 (Storage)
+#### Week 6: 클리닉 설정 ✅
+- [x] 클리닉 정보 수정 (Settings.tsx)
+- [x] 영업시간 설정 UI
+- [x] 휴무일 관리 UI
+- [x] 서비스 관리 UI
+- [ ] 이미지 업로드 (Storage) - 향후 구현
 
 #### Week 7: 통계 및 알림
 - [ ] Recharts 통계 그래프
@@ -2045,15 +2051,43 @@ export function Input({
 - [ ] 알림 설정 페이지
 - [ ] 엑셀 내보내기
 
-### Phase 4: 다국어 및 최적화 (1주)
+### Phase 4: 코드 최적화 및 배포 (1주) ✅ 완료
 
-#### Week 8: 마무리
-- [ ] 다국어 지원 (i18n)
-- [ ] React Compiler 최적화
-- [ ] Lighthouse 성능 최적화
-- [ ] E2E 테스트 (Playwright)
-- [ ] 문서화
-- [ ] 프로덕션 배포
+#### Week 7-8: 최적화 및 배포 ✅
+- [x] 코드 최적화 (2025-10-27)
+  - [x] 보안 취약점 수정 (.gitignore 환경변수 노출 제거)
+  - [x] Supabase 프로젝트 URL 수정 및 타입 재생성
+  - [x] useLogout 커스텀 훅 생성 (코드 중복 제거)
+  - [x] React 19 useId() 적용
+  - [x] 프로덕션 안전 logger 유틸리티 생성
+  - [x] 전화번호 검증 개선 (모든 한국 번호 지원)
+  - [x] ErrorBoundary 컴포넌트 추가
+  - [x] 미사용 imports/variables 제거 (15개)
+  - [x] TypeScript 타입 안전성 개선
+  - [x] 환경변수 타입 정의 (vite-env.d.ts)
+- [x] React Compiler 최적화 ✅ (이미 적용됨)
+- [x] 프로덕션 배포 ✅ (Vercel)
+  - [x] Vercel 설정 파일 생성 (vercel.json)
+  - [x] GitHub 연동 및 푸시
+  - [x] 환경변수 설정 (Supabase URL, Anon Key)
+  - [x] 프로덕션 배포 완료
+  - [x] 배포 URL: https://ai-pet-doctor-hospital.vercel.app
+- [ ] 다국어 지원 (i18n) - Phase 5
+- [ ] Lighthouse 성능 최적화 - Phase 5
+- [ ] E2E 테스트 (Playwright) - Phase 5
+
+### Phase 5: AI펫닥터 연동 (예정)
+- [ ] Webhook 수신 (Supabase Edge Function)
+- [ ] 스마트 진단서 컴포넌트
+- [ ] 긴급도 기반 필터링
+- [ ] Webhook 전송 (예약 응답)
+
+### Phase 6: 통계 및 고급 기능 (예정)
+- [ ] Recharts 통계 그래프
+- [ ] 이메일 알림 (Edge Functions)
+- [ ] 브라우저 알림
+- [ ] 알림 설정 페이지
+- [ ] 엑셀 내보내기
 
 ---
 
@@ -2069,14 +2103,14 @@ export function Input({
 - **SEO**: 90+
 
 #### 빌드 시간
-- **개발 빌드**: < 3초
-- **프로덕션 빌드**: < 30초
-- **HMR**: < 100ms
+- **개발 빌드**: < 3초 ✅ (실제: ~3초)
+- **프로덕션 빌드**: < 30초 ✅ (실제: ~20초, Vercel)
+- **HMR**: < 100ms ✅
 
 #### 번들 크기
-- **초기 로드**: < 200KB (gzipped)
-- **총 JS**: < 500KB (gzipped)
-- **총 CSS**: < 50KB (gzipped)
+- **초기 로드**: < 200KB (gzipped) ✅ (실제: 192.79 KB)
+- **총 JS**: < 500KB (gzipped) ⚠️ (실제: 698.40 KB, 최적화 필요)
+- **총 CSS**: < 50KB (gzipped) ✅ (실제: 10.88 KB)
 
 ### 10.2 사용자 지표
 
@@ -2136,13 +2170,154 @@ export function Input({
 
 ---
 
-## 12. 부록
+## 12. 배포 및 운영
 
-### 12.1 참고 문서
+### 12.1 프로덕션 배포 정보
+
+#### 배포 플랫폼
+- **호스팅**: Vercel
+- **배포 방식**: GitHub 연동 자동 배포
+- **배포 URL**: https://ai-pet-doctor-hospital.vercel.app
+- **대체 URL**:
+  - https://ai-pet-doctor-hospital-inervetdevs-projects.vercel.app
+  - https://ai-pet-doctor-hospital-dslee-7581-inervetdevs-projects.vercel.app
+
+#### 배포 구성
+```json
+{
+  "framework": "vite",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "pnpm install",
+  "devCommand": "pnpm dev"
+}
+```
+
+#### 환경변수
+- `VITE_SUPABASE_URL`: Supabase 프로젝트 URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase 익명 키
+- `VITE_AI_PET_DOCTOR_WEBHOOK_URL`: AI펫닥터 Webhook URL (Phase 5)
+- `VITE_AI_PET_DOCTOR_API_KEY`: AI펫닥터 API 키 (Phase 5)
+
+#### 배포 이력
+- **2025-10-27**: 초기 프로덕션 배포
+  - Phase 1-4 완료 (인프라, 인증, 예약, 관리자, 클리닉 설정)
+  - 코드 최적화 완료 (보안, 타입 안전성, 성능)
+  - 빌드 시간: ~20초
+  - 번들 크기: 698.40 KB (gzip: 192.79 KB)
+
+### 12.2 로컬 개발 환경
+
+#### 개발 서버
+- **URL**: http://localhost:5175
+- **포트**: 5175 (vite.config.ts에서 고정)
+- **HMR**: 활성화
+- **React Compiler**: 개발 모드에서도 활성화
+
+#### 개발 환경 설정
+```bash
+# 의존성 설치
+pnpm install
+
+# 개발 서버 실행
+pnpm dev
+
+# 타입 체크
+pnpm typecheck
+
+# 프로덕션 빌드
+pnpm build
+
+# 빌드 미리보기
+pnpm preview
+```
+
+### 12.3 코드 최적화 완료 항목 (2025-10-27)
+
+#### 보안
+- ✅ .gitignore 환경변수 노출 취약점 수정
+- ✅ .env.example 템플릿 생성
+- ✅ Supabase 프로젝트 URL/Key 검증 및 수정
+
+#### 코드 품질
+- ✅ useLogout 커스텀 훅 생성 (3개 파일에서 중복 코드 제거)
+- ✅ React 19 useId() 적용 (SSR 안전)
+- ✅ logger.ts 유틸리티 생성 (프로덕션 안전 로깅)
+- ✅ ErrorBoundary 컴포넌트 추가
+- ✅ 미사용 imports 10개 제거
+- ✅ 미사용 state variables 5개 제거
+- ✅ 미사용 type definitions 2개 제거
+
+#### 타입 안전성
+- ✅ any → unknown 타입 변경
+- ✅ vite-env.d.ts 환경변수 타입 정의
+- ✅ useEffect 의존성 배열 수정
+- ✅ Null 안전성 체크 추가
+- ✅ database.types.ts 재생성 (올바른 Supabase 프로젝트)
+- ✅ booking_number optional 타입 수정 (DB 트리거 대응)
+- ✅ 40+ 타입 별칭 추가 (하위 호환성)
+
+#### 기능 개선
+- ✅ 전화번호 검증 개선 (010, 011, 016, 017, 018, 019 지원)
+- ✅ 예약 폼 자동 포맷팅
+- ✅ 에러 로깅 강화
+
+### 12.4 배포 자동화
+
+#### GitHub Actions (향후 구현)
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+      - run: pnpm install
+      - run: pnpm typecheck
+      - run: pnpm build
+      - uses: amondnet/vercel-action@v20
+```
+
+#### CI/CD 파이프라인
+1. **코드 푸시** → GitHub main 브랜치
+2. **자동 빌드** → Vercel 자동 감지
+3. **타입 체크** → TypeScript 검증
+4. **빌드** → Vite 프로덕션 빌드
+5. **배포** → Vercel CDN 배포
+6. **알림** → Slack/Discord 알림 (향후)
+
+### 12.5 모니터링 및 분석
+
+#### Vercel Analytics (향후)
+- 페이지 뷰
+- 사용자 세션
+- 성능 지표 (Core Web Vitals)
+- 에러 추적
+
+#### Supabase Dashboard
+- 데이터베이스 쿼리 성능
+- API 요청 수
+- 인증 통계
+- 스토리지 사용량
+
+---
+
+## 13. 부록
+
+### 13.1 참고 문서
+- [CLAUDE.md](../CLAUDE.md) - Claude Code 개발 가이드
+- [DESIGN_GUIDE.md](../DESIGN_GUIDE.md) - Clean Booking 디자인 시스템
+- [ADMIN_SETUP.md](../ADMIN_SETUP.md) - 관리자 설정 가이드
 - [기존 FUNCTIONAL_SPECIFICATION.md](./FUNCTIONAL_SPECIFICATION.md)
 - [Supabase 공식 문서](https://supabase.com/docs)
 - [React 19 문서](https://react.dev/)
 - [React Compiler](https://react.dev/learn/react-compiler)
+- [Vercel 문서](https://vercel.com/docs)
 - [Vite 문서](https://vitejs.dev/)
 - [Zustand 문서](https://zustand-demo.pmnd.rs/)
 
