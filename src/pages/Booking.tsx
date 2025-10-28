@@ -406,7 +406,11 @@ export default function Booking() {
               <BookingCalendar
                 selectedDate={selectedDate}
                 onSelectDate={handleDateSelect}
-                minDate={new Date()}
+                minDate={(() => {
+                  const today = new Date()
+                  today.setHours(0, 0, 0, 0)
+                  return today
+                })()}
               />
             )}
 

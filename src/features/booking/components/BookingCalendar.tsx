@@ -52,8 +52,23 @@ export function BookingCalendar({
 
   const isDateDisabled = (date: Date | null) => {
     if (!date) return true
-    if (minDate && date < minDate) return true
-    if (maxDate && date > maxDate) return true
+
+    // 날짜만 비교하기 위해 시간을 00:00:00으로 설정
+    const dateOnly = new Date(date)
+    dateOnly.setHours(0, 0, 0, 0)
+
+    if (minDate) {
+      const minDateOnly = new Date(minDate)
+      minDateOnly.setHours(0, 0, 0, 0)
+      if (dateOnly < minDateOnly) return true
+    }
+
+    if (maxDate) {
+      const maxDateOnly = new Date(maxDate)
+      maxDateOnly.setHours(0, 0, 0, 0)
+      if (dateOnly > maxDateOnly) return true
+    }
+
     return disabledDates.some(
       (d) => d.toDateString() === date.toDateString()
     )
