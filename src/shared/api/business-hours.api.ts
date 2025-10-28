@@ -5,6 +5,24 @@
 import { supabase } from './supabase'
 import type { BusinessHour, BusinessHourInsert, BusinessHourUpdate } from '@/shared/types/database.types'
 
+// 수의사별 영업시간 타입
+export interface VeterinarianWorkingHour {
+  id: string
+  veterinarian_id: string
+  day_of_week: number
+  is_open: boolean
+  is_24h?: boolean
+  open_time: string | null
+  close_time: string | null
+  break_start: string | null
+  break_end: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export type VeterinarianWorkingHourInsert = Omit<VeterinarianWorkingHour, 'id' | 'created_at' | 'updated_at'>
+export type VeterinarianWorkingHourUpdate = Partial<Omit<VeterinarianWorkingHour, 'id' | 'veterinarian_id' | 'day_of_week' | 'created_at' | 'updated_at'>>
+
 /**
  * 클리닉의 모든 영업시간 조회
  */
@@ -109,6 +127,99 @@ export async function initializeBusinessHours(clinicId: string): Promise<Busines
 
   if (error) {
     console.error('영업시간 초기화 실패:', error)
+    throw error
+  }
+
+  return data || []
+}
+
+/**
+ * 수의사별 영업시간 조회
+ */
+export async function getVeterinarianWorkingHours(
+  veterinarianId: string
+): Promise<VeterinarianWorkingHour[]> {
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .select('*')
+    .eq('veterinarian_id', veterinarianId)
+    .order('day_of_week', { ascending: true })
+
+  if (error) {
+    console.error('수의사 영업시간 조회 실패:', error)
+    throw error
+  }
+
+  return data || []
+}
+
+/**
+ * 수의사별 영업시간 생성
+ */
+export async function createVeterinarianWorkingHour(
+  workingHour: VeterinarianWorkingHourInsert
+): Promise<VeterinarianWorkingHour> {
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .insert(workingHour)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('수의사 영업시간 생성 실패:', error)
+    throw error
+  }
+
+  return data
+}
+
+/**
+ * 수의사별 영업시간 수정
+ */
+export async function updateVeterinarianWorkingHour(
+  id: string,
+  updates: VeterinarianWorkingHourUpdate
+): Promise<VeterinarianWorkingHour> {
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('수의사 영업시간 수정 실패:', error)
+    throw error
+  }
+
+  return data
+}
+
+/**
+ * 수의사별 영업시간 초기화 (클리닉 영업시간 기반)
+ */
+export async function initializeVeterinarianWorkingHours(
+  veterinarianId: string,
+  clinicHours: BusinessHour[]
+): Promise<VeterinarianWorkingHour[]> {
+  const defaultHours: VeterinarianWorkingHourInsert[] = clinicHours.map((hour) => ({
+    veterinarian_id: veterinarianId,
+    day_of_week: hour.day_of_week,
+    is_open: hour.is_open || false,
+    is_24h: hour.is_24h || false,
+    open_time: hour.open_time,
+    close_time: hour.close_time,
+    break_start: hour.break_start,
+    break_end: hour.break_end,
+  }))
+
+  const { data, error } = await supabase
+    .from('veterinarian_working_hours')
+    .insert(defaultHours)
+    .select()
+
+  if (error) {
+    console.error('수의사 영업시간 초기화 실패:', error)
     throw error
   }
 

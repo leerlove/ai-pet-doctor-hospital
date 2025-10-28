@@ -3,7 +3,7 @@
  */
 
 import { useState } from 'react'
-import { Clock, Save } from 'lucide-react'
+import { Clock, Save, Copy } from 'lucide-react'
 import { Button } from '@/shared/components'
 import { showToast } from '@/shared/components/Toast'
 import { updateBusinessHour } from '@/shared/api/business-hours.api'
@@ -34,6 +34,17 @@ const TIME_OPTIONS = generateTimeOptions()
 export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEditorProps) {
   const [editingHours, setEditingHours] = useState<BusinessHour[]>(businessHours)
   const [isSaving, setIsSaving] = useState(false)
+  const [showBulkApply, setShowBulkApply] = useState(false)
+
+  // 일괄 적용용 상태
+  const [bulkSettings, setBulkSettings] = useState({
+    is_open: true,
+    is_24h: false,
+    open_time: '09:00',
+    close_time: '18:00',
+    break_start: '',
+    break_end: '',
+  })
 
   const handleToggleOpen = (index: number) => {
     const newHours = [...editingHours]
@@ -66,6 +77,41 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
     setEditingHours(newHours)
   }
 
+  // 일괄 적용 함수
+  const handleBulkApply = () => {
+    if (
+      !window.confirm(
+        '모든 요일에 동일한 영업시간을 적용하시겠습니까?\n기존 설정이 모두 변경됩니다.'
+      )
+    ) {
+      return
+    }
+
+    const newHours = editingHours.map((hour) => ({
+      ...hour,
+      is_open: bulkSettings.is_open,
+      is_24h: bulkSettings.is_24h,
+      open_time: bulkSettings.is_open && !bulkSettings.is_24h ? bulkSettings.open_time : null,
+      close_time: bulkSettings.is_open && !bulkSettings.is_24h ? bulkSettings.close_time : null,
+      break_start:
+        bulkSettings.is_open && !bulkSettings.is_24h && bulkSettings.break_start
+          ? bulkSettings.break_start
+          : null,
+      break_end:
+        bulkSettings.is_open && !bulkSettings.is_24h && bulkSettings.break_end
+          ? bulkSettings.break_end
+          : null,
+    }))
+
+    setEditingHours(newHours)
+    setShowBulkApply(false)
+    showToast({
+      title: '일괄 적용 완료',
+      description: '모든 요일에 동일한 설정이 적용되었습니다',
+      variant: 'success',
+    })
+  }
+
   const handleSave = async () => {
     try {
       setIsSaving(true)
@@ -73,7 +119,7 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
       // 검증
       for (let i = 0; i < editingHours.length; i++) {
         const hour = editingHours[i]
-        if (hour.is_open) {
+        if (hour.is_open && !hour.is_24h) {
           if (!hour.open_time || !hour.close_time) {
             showToast({
               title: '입력 오류',
@@ -149,6 +195,157 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
 
   return (
     <div className="space-y-6">
+      {/* 일괄 적용 섹션 */}
+      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl p-6 border border-teal-200">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Copy className="w-5 h-5 text-teal-600" />
+            <h3 className="text-lg font-semibold text-gray-900">전체 일괄 적용</h3>
+          </div>
+          <button
+            onClick={() => setShowBulkApply(!showBulkApply)}
+            className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+          >
+            {showBulkApply ? '접기' : '펼치기'}
+          </button>
+        </div>
+
+        {showBulkApply && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              모든 요일에 동일한 영업시간을 한 번에 설정합니다.
+            </p>
+
+            {/* 일괄 적용 설정 */}
+            <div className="bg-white rounded-xl p-4 space-y-4">
+              {/* 영업 여부 및 24시간 */}
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-sm font-medium text-gray-700">영업</span>
+                  <input
+                    type="checkbox"
+                    checked={bulkSettings.is_open}
+                    onChange={(e) =>
+                      setBulkSettings({ ...bulkSettings, is_open: e.target.checked })
+                    }
+                    className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500"
+                  />
+                </label>
+
+                {bulkSettings.is_open && (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-sm font-medium text-gray-700">24시간</span>
+                    <input
+                      type="checkbox"
+                      checked={bulkSettings.is_24h}
+                      onChange={(e) =>
+                        setBulkSettings({ ...bulkSettings, is_24h: e.target.checked })
+                      }
+                      className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* 영업시간 설정 (24시간이 아닐 때만) */}
+              {bulkSettings.is_open && !bulkSettings.is_24h && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* 영업 시간 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      영업 시간
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={bulkSettings.open_time}
+                        onChange={(e) =>
+                          setBulkSettings({ ...bulkSettings, open_time: e.target.value })
+                        }
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      >
+                        {TIME_OPTIONS.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-gray-500">~</span>
+                      <select
+                        value={bulkSettings.close_time}
+                        onChange={(e) =>
+                          setBulkSettings({ ...bulkSettings, close_time: e.target.value })
+                        }
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      >
+                        {TIME_OPTIONS.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 점심시간 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      점심시간 (선택)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={bulkSettings.break_start}
+                        onChange={(e) =>
+                          setBulkSettings({ ...bulkSettings, break_start: e.target.value })
+                        }
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      >
+                        <option value="">없음</option>
+                        {TIME_OPTIONS.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-gray-500">~</span>
+                      <select
+                        value={bulkSettings.break_end}
+                        onChange={(e) =>
+                          setBulkSettings({ ...bulkSettings, break_end: e.target.value })
+                        }
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      >
+                        <option value="">없음</option>
+                        {TIME_OPTIONS.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 24시간 영업 표시 */}
+              {bulkSettings.is_open && bulkSettings.is_24h && (
+                <div className="text-center py-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <p className="text-emerald-700 font-medium">24시간 영업</p>
+                </div>
+              )}
+
+              {/* 일괄 적용 버튼 */}
+              <div className="flex justify-end">
+                <Button variant="primary" size="md" onClick={handleBulkApply}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  모든 요일에 적용
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 개별 요일 설정 */}
       {editingHours.map((hour, index) => (
         <div
           key={hour.id}

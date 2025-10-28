@@ -30,6 +30,7 @@ import { getAllClosedDates, deleteClosedDate } from '@/shared/api/closed-dates.a
 import { getAllServices, deleteService } from '@/shared/api/services.api'
 import { getAvailableVeterinarians, type Veterinarian } from '@/shared/api/veterinarians.api'
 import { BusinessHoursEditor, ClosedDateModal, ServiceModal } from '@/features/clinic/components'
+import { VeterinarianWorkingHoursEditor } from '@/features/clinic/components/VeterinarianWorkingHoursEditor'
 import { showToast } from '@/shared/components/Toast'
 import type { Clinic, BusinessHour, ClosedDate, Service } from '@/shared/types/database.types'
 
@@ -46,7 +47,7 @@ const clinicInfoSchema = z.object({
 type ClinicInfoForm = z.infer<typeof clinicInfoSchema>
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState<'info' | 'hours' | 'holidays' | 'services'>('info')
+  const [activeTab, setActiveTab] = useState<'info' | 'hours' | 'vet-hours' | 'holidays' | 'services'>('info')
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
   const [closedDates, setClosedDates] = useState<ClosedDate[]>([])
@@ -260,6 +261,20 @@ export default function Settings() {
             </button>
 
             <button
+              onClick={() => setActiveTab('vet-hours')}
+              className={`py-4 px-3 border-b-2 font-medium text-sm transition-all ${
+                activeTab === 'vet-hours'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <UserCog className="w-5 h-5" />
+                <span className="hidden sm:inline">수의사 영업시간</span>
+              </div>
+            </button>
+
+            <button
               onClick={() => setActiveTab('holidays')}
               className={`py-4 px-3 border-b-2 font-medium text-sm transition-all ${
                 activeTab === 'holidays'
@@ -411,6 +426,28 @@ export default function Settings() {
                 <div className="text-center py-8 text-gray-500">
                   영업시간 정보가 없습니다.
                 </div>
+              )}
+          </div>
+        )}
+
+        {/* 수의사별 영업 시간 탭 */}
+        {activeTab === 'vet-hours' && (
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">수의사별 영업시간</h3>
+                <p className="text-sm text-gray-500">
+                  각 수의사의 진료 가능 시간을 별도로 설정합니다.
+                </p>
+              </div>
+
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-500">로딩 중...</div>
+              ) : (
+                <VeterinarianWorkingHoursEditor
+                  veterinarians={veterinarians}
+                  clinicHours={businessHours}
+                  onUpdate={loadClinicData}
+                />
               )}
           </div>
         )}
