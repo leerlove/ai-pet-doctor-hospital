@@ -1,5 +1,6 @@
 /**
  * ClosedDateModal.tsx - 휴무일 추가 모달
+ * 수의사별 또는 전체 휴무 선택 가능
  */
 
 import { useState } from 'react'
@@ -10,10 +11,12 @@ import { X, Calendar } from 'lucide-react'
 import { Modal, Button, Input } from '@/shared/components'
 import { showToast } from '@/shared/components/Toast'
 import { createClosedDate } from '@/shared/api/closed-dates.api'
+import type { Veterinarian } from '@/shared/api/veterinarians.api'
 
 const closedDateSchema = z.object({
   date: z.string().min(1, '날짜를 선택해주세요'),
   reason: z.string().min(1, '휴무 사유를 입력해주세요'),
+  veterinarian_id: z.string().optional(),
 })
 
 type ClosedDateForm = z.infer<typeof closedDateSchema>
@@ -23,6 +26,7 @@ interface ClosedDateModalProps {
   onClose: () => void
   onSuccess: () => void
   clinicId: string
+  veterinarians?: Veterinarian[]
 }
 
 export function ClosedDateModal({
@@ -30,6 +34,7 @@ export function ClosedDateModal({
   onClose,
   onSuccess,
   clinicId,
+  veterinarians = [],
 }: ClosedDateModalProps) {
   const [isSaving, setIsSaving] = useState(false)
 
@@ -38,6 +43,7 @@ export function ClosedDateModal({
     defaultValues: {
       date: '',
       reason: '',
+      veterinarian_id: '',
     },
   })
 
@@ -63,6 +69,7 @@ export function ClosedDateModal({
         clinic_id: clinicId,
         date: data.date,
         reason: data.reason,
+        veterinarian_id: data.veterinarian_id || null,
       })
 
       showToast({
@@ -107,6 +114,29 @@ export function ClosedDateModal({
 
         {/* Body */}
         <form onSubmit={form.handleSubmit(handleSubmit)} className="p-6 space-y-4">
+          {/* 수의사 선택 (선택사항) */}
+          {veterinarians.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                휴무 대상
+              </label>
+              <select
+                {...form.register('veterinarian_id')}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              >
+                <option value="">전체 휴무 (클리닉 전체)</option>
+                {veterinarians.map((vet) => (
+                  <option key={vet.id} value={vet.id}>
+                    {vet.name} {vet.title && `(${vet.title})`}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                특정 수의사만 휴무인 경우 선택하세요
+              </p>
+            </div>
+          )}
+
           {/* 날짜 선택 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

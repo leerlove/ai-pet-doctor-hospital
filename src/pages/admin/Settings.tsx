@@ -21,12 +21,14 @@ import {
   MapPin,
   Phone,
   Mail,
+  UserCog,
 } from 'lucide-react'
-import { Button, Input, Card, CardBody, Badge, PageHeader } from '@/shared/components'
+import { Button, Input, Badge, PageHeader } from '@/shared/components'
 import { getFirstClinic, updateClinic } from '@/shared/api/clinics.api'
 import { getBusinessHours } from '@/shared/api/business-hours.api'
 import { getAllClosedDates, deleteClosedDate } from '@/shared/api/closed-dates.api'
 import { getAllServices, deleteService } from '@/shared/api/services.api'
+import { getAvailableVeterinarians, type Veterinarian } from '@/shared/api/veterinarians.api'
 import { BusinessHoursEditor, ClosedDateModal, ServiceModal } from '@/features/clinic/components'
 import { showToast } from '@/shared/components/Toast'
 import type { Clinic, BusinessHour, ClosedDate, Service } from '@/shared/types/database.types'
@@ -49,6 +51,7 @@ export default function Settings() {
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
   const [closedDates, setClosedDates] = useState<ClosedDate[]>([])
   const [services, setServices] = useState<Service[]>([])
+  const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isClosedDateModalOpen, setIsClosedDateModalOpen] = useState(false)
@@ -93,17 +96,18 @@ export default function Settings() {
         email: data.email || '',
       })
 
-      // 영업시간 로드
-      const hours = await getBusinessHours(data.id)
+      // 병렬로 데이터 로드
+      const [hours, dates, servicesData, vets] = await Promise.all([
+        getBusinessHours(data.id),
+        getAllClosedDates(data.id),
+        getAllServices(),
+        getAvailableVeterinarians(data.id),
+      ])
+
       setBusinessHours(hours)
-
-      // 휴무일 로드
-      const dates = await getAllClosedDates(data.id)
       setClosedDates(dates)
-
-      // 서비스 로드
-      const servicesData = await getAllServices()
       setServices(servicesData)
+      setVeterinarians(vets)
     } catch (error) {
       console.error('클리닉 정보 로드 실패:', error)
       showToast({
@@ -149,8 +153,12 @@ export default function Settings() {
     }
   }
 
-  const handleDeleteClosedDate = async (id: string, date: string) => {
-    if (!confirm(`${date} 휴무일을 삭제하시겠습니까?`)) {
+  const handleDeleteClosedDate = async (id: string, date: string, veterinarianName?: string) => {
+    const message = veterinarianName
+      ? `${veterinarianName} 수의사의 ${date} 휴무일을 삭제하시겠습니까?`
+      : `${date} 전체 휴무일을 삭제하시겠습니까?`
+
+    if (!confirm(message)) {
       return
     }
 
@@ -158,7 +166,6 @@ export default function Settings() {
       await deleteClosedDate(id)
       showToast({
         title: '휴무일 삭제 완료',
-        description: '휴무일이 성공적으로 삭제되었습니다',
         variant: 'success',
       })
       loadClinicData()
@@ -166,7 +173,6 @@ export default function Settings() {
       console.error('휴무일 삭제 실패:', error)
       showToast({
         title: '삭제 실패',
-        description: '휴무일 삭제 중 오류가 발생했습니다',
         variant: 'error',
       })
     }
@@ -207,27 +213,27 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">로딩 중...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-teal-200 border-t-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">로딩 중...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50">
       {/* Header */}
       <PageHeader title="클리닉 설정" backTo="/admin/dashboard" />
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex gap-8" aria-label="Tabs">
+          <nav className="flex gap-4" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('info')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-4 px-3 border-b-2 font-medium text-sm transition-all ${
                 activeTab === 'info'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -235,13 +241,13 @@ export default function Settings() {
             >
               <div className="flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                <span>기본 정보</span>
+                <span className="hidden sm:inline">기본 정보</span>
               </div>
             </button>
 
             <button
               onClick={() => setActiveTab('hours')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-4 px-3 border-b-2 font-medium text-sm transition-all ${
                 activeTab === 'hours'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -249,13 +255,13 @@ export default function Settings() {
             >
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
-                <span>영업 시간</span>
+                <span className="hidden sm:inline">영업 시간</span>
               </div>
             </button>
 
             <button
               onClick={() => setActiveTab('holidays')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-4 px-3 border-b-2 font-medium text-sm transition-all ${
                 activeTab === 'holidays'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -263,13 +269,13 @@ export default function Settings() {
             >
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                <span>휴무일 관리</span>
+                <span className="hidden sm:inline">휴무일 관리</span>
               </div>
             </button>
 
             <button
               onClick={() => setActiveTab('services')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-4 px-3 border-b-2 font-medium text-sm transition-all ${
                 activeTab === 'services'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -277,7 +283,7 @@ export default function Settings() {
             >
               <div className="flex items-center gap-2">
                 <Stethoscope className="w-5 h-5" />
-                <span>서비스 관리</span>
+                <span className="hidden sm:inline">서비스 관리</span>
               </div>
             </button>
           </nav>
@@ -288,8 +294,7 @@ export default function Settings() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 기본 정보 탭 */}
         {activeTab === 'info' && (
-          <Card>
-            <CardBody>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
               <form onSubmit={clinicForm.handleSubmit(handleSaveClinicInfo)} className="space-y-6">
                 {/* 병원명 */}
                 <div>
@@ -382,14 +387,12 @@ export default function Settings() {
                   </Button>
                 </div>
               </form>
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* 영업 시간 탭 */}
         {activeTab === 'hours' && (
-          <Card>
-            <CardBody>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">영업 시간 설정</h3>
                 <p className="text-sm text-gray-500">
@@ -409,14 +412,12 @@ export default function Settings() {
                   영업시간 정보가 없습니다.
                 </div>
               )}
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* 휴무일 관리 탭 */}
         {activeTab === 'holidays' && (
-          <Card>
-            <CardBody>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">휴무일 관리</h3>
                 <p className="text-sm text-gray-500">특별 휴무일을 등록하고 관리합니다.</p>
@@ -440,31 +441,50 @@ export default function Settings() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {closedDates.map((closedDate) => (
-                    <div
-                      key={closedDate.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Calendar className="w-5 h-5 text-teal-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">{closedDate.date}</p>
-                          <p className="text-sm text-gray-500">{closedDate.reason}</p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleDeleteClosedDate(closedDate.id, closedDate.date)}
+                  {closedDates.map((closedDate) => {
+                    const vet = veterinarians.find((v) => v.id === closedDate.veterinarian_id)
+                    return (
+                      <div
+                        key={closedDate.id}
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl hover:shadow-md transition-all border border-gray-100"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-10 h-10 bg-teal-100 rounded-lg">
+                            <Calendar className="w-5 h-5 text-teal-600" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900">{closedDate.date}</p>
+                              {vet && (
+                                <Badge variant="default" className="bg-blue-100 text-blue-700">
+                                  <UserCog className="w-3 h-3 mr-1" />
+                                  {vet.name}
+                                </Badge>
+                              )}
+                              {!vet && (
+                                <Badge variant="default" className="bg-orange-100 text-orange-700">
+                                  전체 휴무
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500">{closedDate.reason}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() =>
+                            handleDeleteClosedDate(closedDate.id, closedDate.date, vet?.name)
+                          }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* 휴무일 추가 모달 */}
@@ -474,13 +494,13 @@ export default function Settings() {
             onClose={() => setIsClosedDateModalOpen(false)}
             onSuccess={loadClinicData}
             clinicId={clinic.id}
+            veterinarians={veterinarians}
           />
         )}
 
         {/* 서비스 관리 탭 */}
         {activeTab === 'services' && (
-          <Card>
-            <CardBody>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">서비스 관리</h3>
                 <p className="text-sm text-gray-500">
@@ -550,8 +570,7 @@ export default function Settings() {
                   ))}
                 </div>
               )}
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* 서비스 추가/수정 모달 */}

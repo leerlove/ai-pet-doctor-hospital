@@ -44,6 +44,15 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
     setEditingHours(newHours)
   }
 
+  const handleToggle24h = (index: number) => {
+    const newHours = [...editingHours]
+    newHours[index] = {
+      ...newHours[index],
+      is_24h: !newHours[index].is_24h,
+    }
+    setEditingHours(newHours)
+  }
+
   const handleTimeChange = (
     index: number,
     field: 'open_time' | 'close_time' | 'break_start' | 'break_end',
@@ -110,10 +119,11 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
         editingHours.map((hour) =>
           updateBusinessHour(hour.id, {
             is_open: hour.is_open,
-            open_time: hour.is_open ? hour.open_time : null,
-            close_time: hour.is_open ? hour.close_time : null,
-            break_start: hour.is_open ? hour.break_start : null,
-            break_end: hour.is_open ? hour.break_end : null,
+            is_24h: hour.is_24h || false,
+            open_time: hour.is_open && !hour.is_24h ? hour.open_time : null,
+            close_time: hour.is_open && !hour.is_24h ? hour.close_time : null,
+            break_start: hour.is_open && !hour.is_24h ? hour.break_start : null,
+            break_end: hour.is_open && !hour.is_24h ? hour.break_end : null,
           })
         )
       )
@@ -150,19 +160,39 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
               <h4 className="font-medium text-gray-900">{DAY_NAMES[index]}</h4>
             </div>
 
-            {/* 영업 여부 토글 */}
-            <label className="flex items-center gap-2 cursor-pointer">
-              <span className="text-sm text-gray-600">영업</span>
-              <input
-                type="checkbox"
-                checked={hour.is_open || false}
-                onChange={() => handleToggleOpen(index)}
-                className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500"
-              />
-            </label>
+            <div className="flex items-center gap-4">
+              {/* 24시간 영업 체크박스 */}
+              {hour.is_open && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-sm text-gray-600">24시간</span>
+                  <input
+                    type="checkbox"
+                    checked={hour.is_24h || false}
+                    onChange={() => handleToggle24h(index)}
+                    className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500"
+                  />
+                </label>
+              )}
+
+              {/* 영업 여부 토글 */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-sm text-gray-600">영업</span>
+                <input
+                  type="checkbox"
+                  checked={hour.is_open || false}
+                  onChange={() => handleToggleOpen(index)}
+                  className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500"
+                />
+              </label>
+            </div>
           </div>
 
           {hour.is_open ? (
+            hour.is_24h ? (
+              <div className="text-center py-6 bg-emerald-50 rounded-lg border border-emerald-200">
+                <p className="text-emerald-700 font-medium">24시간 영업</p>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 영업 시간 */}
               <div>
@@ -236,6 +266,7 @@ export function BusinessHoursEditor({ businessHours, onUpdate }: BusinessHoursEd
                 </div>
               </div>
             </div>
+            )
           ) : (
             <div className="text-center py-4 text-gray-500">휴무</div>
           )}
