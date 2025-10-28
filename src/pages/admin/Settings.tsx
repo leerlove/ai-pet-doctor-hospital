@@ -28,7 +28,7 @@ import { getFirstClinic, updateClinic } from '@/shared/api/clinics.api'
 import { getBusinessHours } from '@/shared/api/business-hours.api'
 import { getAllClosedDates, deleteClosedDate } from '@/shared/api/closed-dates.api'
 import { getAllServices, deleteService } from '@/shared/api/services.api'
-import { getAvailableVeterinarians, type Veterinarian } from '@/shared/api/veterinarians.api'
+import { getVeterinariansByClinic, type Veterinarian } from '@/shared/api/veterinarians.api'
 import { BusinessHoursEditor, ClosedDateModal, ServiceModal } from '@/features/clinic/components'
 import { VeterinarianWorkingHoursEditor } from '@/features/clinic/components/VeterinarianWorkingHoursEditor'
 import { showToast } from '@/shared/components/Toast'
@@ -102,7 +102,7 @@ export default function Settings() {
         getBusinessHours(data.id),
         getAllClosedDates(data.id),
         getAllServices(),
-        getAvailableVeterinarians(data.id),
+        getVeterinariansByClinic(data.id),
       ])
 
       setBusinessHours(hours)
