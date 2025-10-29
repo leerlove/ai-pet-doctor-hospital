@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Previous Stack**: Next.js 14 + Drizzle ORM + NextAuth (deprecated)
 **New Stack**: Vite + React 19 + Supabase + React Compiler 1.0
 **Design System**: Clean Booking (Teal/Green) - See [DESIGN_GUIDE.md](DESIGN_GUIDE.md)
-**Last Updated**: 2025-10-22 (Phase D Complete)
+**Last Updated**: 2025-10-29 (Phase D Complete + Admin Settings Enhanced)
 
 ## Architecture Overview
 
@@ -847,10 +847,19 @@ test('사용자가 예약을 생성할 수 있다', async ({ page }) => {
   - [x] MyBookings.tsx (탭 필터, 상태 배지, 상세보기)
 
 - [x] **클리닉 설정 페이지** (/admin/settings)
-  - [x] 4개 탭 구조 (기본정보, 영업시간, 휴무일, 서비스)
+  - [x] 5개 탭 구조 (기본정보, 영업시간, 수의사 영업시간, 휴무일, 서비스)
   - [x] 기본 정보 폼 (React Hook Form + Zod)
   - [x] 영업 시간 설정 UI
+    - [x] **일괄 적용 기능** - 모든 요일에 동일한 설정 적용 ⭐
+    - [x] **24시간 영업 체크박스** - 요일별 24시간 영업 지원 ⭐
+  - [x] **수의사별 영업시간 관리** ⭐ NEW
+    - [x] 수의사 선택 드롭다운
+    - [x] 수의사 프로필 표시 (이름, 직급, 전문분야)
+    - [x] 요일별 개별 진료 시간 설정
+    - [x] 클리닉 영업시간 기반 자동 초기화
   - [x] 휴무일 관리 UI
+    - [x] **수의사별 휴무일 설정** - 전체 또는 특정 수의사 선택 ⭐
+    - [x] 수의사 배지 표시 (청색: 개별, 주황색: 전체)
   - [x] 서비스 관리 UI
 
 **Phase D 추가 수정사항**:
@@ -859,6 +868,11 @@ test('사용자가 예약을 생성할 수 있다', async ({ page }) => {
 - [x] 회원가입 시 users 프로필 자동 생성 (Supabase 트리거)
 - [x] pet_age INTEGER 변환
 - [x] 에러 로깅 강화
+- [x] Login/Signup 페이지 디자인 개선 (Clean Booking 스타일)
+- [x] 당일 예약 가능하도록 수정
+- [x] veterinarians 테이블 및 working hours 테이블 추가
+- [x] business_hours에 is_24h 컬럼 추가
+- [x] closed_dates에 veterinarian_id 컬럼 추가
 
 ### 📋 Phase E: AI Integration (Planned)
 - [ ] AI펫닥터 Webhook 수신 (Supabase Edge Function)
@@ -950,9 +964,9 @@ psql supabase_db < backup_adjusted.sql
 
 ---
 
-## Phase D Implementation Summary (2025-10-22)
+## Phase D Implementation Summary (2025-10-29 Updated)
 
-### 📦 Created Files (10개)
+### 📦 Created Files (13개)
 **Booking Components**:
 - `src/features/booking/components/BookingCalendar.tsx` - 월간 캘린더 (195 lines)
 - `src/features/booking/components/TimeSlotPicker.tsx` - 시간 선택 (133 lines)
@@ -963,52 +977,73 @@ psql supabase_db < backup_adjusted.sql
 **Booking Hooks**:
 - `src/features/booking/hooks/useBookingActions.ts` - 예약 액션 (168 lines)
 
+**Clinic Components** ⭐ NEW:
+- `src/features/clinic/components/VeterinarianWorkingHoursEditor.tsx` - 수의사별 영업시간 (470 lines)
+
 **Pages**:
 - `src/pages/Booking.tsx` - 예약 생성 페이지 (338 lines)
-- `src/pages/admin/Settings.tsx` - 클리닉 설정 (519 lines)
+- `src/pages/admin/Settings.tsx` - 클리닉 설정 (Enhanced, 5 tabs)
+- `src/pages/Login.tsx` - 로그인 페이지 (Clean Booking 디자인)
+- `src/pages/Signup.tsx` - 회원가입 페이지 (Clean Booking 디자인)
 
 **Database**:
 - `supabase/migrations/20250122_auto_create_user_profile.sql` - 자동 프로필 생성
+- `supabase/migrations/20250129_add_veterinarian_to_closed_dates.sql` - 휴무일 수의사 연동
+- `supabase/migrations/20250129_add_24h_to_business_hours.sql` - 24시간 영업 지원
+- `APPLY-ADMIN-SETTINGS-MIGRATION.sql` - Veterinarians & Working Hours 테이블
 - `test-booking.js` - 테스트 스크립트
 
-### ✏️ Modified Files (5개)
+### ✏️ Modified Files (8개)
 - `src/App.tsx` - 라우트 추가 (Booking, Settings)
 - `src/pages/MyBookings.tsx` - 모달 통합
+- `src/pages/admin/Settings.tsx` - 5탭 구조로 확장, 수의사 영업시간 탭 추가
 - `src/shared/components/Toast.tsx` - showToast 함수 추가
 - `src/features/booking/components/index.ts` - exports 업데이트
+- `src/features/booking/components/BookingCalendar.tsx` - 당일 예약 허용
+- `src/features/clinic/components/BusinessHoursEditor.tsx` - 일괄 적용 & 24시간 기능
+- `src/features/clinic/components/ClosedDateModal.tsx` - 수의사 선택 기능
+- `src/shared/api/business-hours.api.ts` - 수의사 영업시간 API 추가
 - `vite.config.ts` - 포트 5175 고정
 
 ### 📊 Implementation Stats
-- **총 코드 라인**: ~2,000+ lines
-- **컴포넌트**: 7개 (Calendar, TimePicker, Form, Modal 등)
-- **페이지**: 2개 (Booking, Settings)
+- **총 코드 라인**: ~3,500+ lines (Updated)
+- **컴포넌트**: 10개 (Calendar, TimePicker, Form, Modal, VetWorkingHoursEditor 등)
+- **페이지**: 4개 (Booking, Settings, Login, Signup)
 - **Hooks**: 1개 (useBookingActions)
-- **마이그레이션**: 1개 (user profile trigger)
+- **마이그레이션**: 4개 (user profile, veterinarians, working hours, 24h support)
 - **타입 에러**: 0개 ✅
-- **빌드 시간**: ~3초 (Vite)
+- **빌드 시간**: ~6초 (Vite)
+- **번들 크기**: 765.84 kB (gzip: 204.66 kB)
 
 ### 🐛 Resolved Issues
 1. **Toast export 에러** - showToast 함수 추가
 2. **400 에러** - clinic_id/service_id 동적 조회
 3. **409 Foreign Key 에러** - user_id null 허용 + 자동 프로필 생성
 4. **pet_age 타입** - parseInt() 변환
+5. **Settings 페이지 에러** - getAvailableVeterinarians → getVeterinariansByClinic 변경
+6. **veterinarians RLS 정책** - 테이블 생성 및 정책 수정
 
 ### 🎯 Key Features Delivered
 - ✅ 3단계 예약 프로세스 (UX 최적화)
 - ✅ 비회원 예약 지원
+- ✅ 당일 예약 가능 ⭐
 - ✅ 실시간 데이터 조회
 - ✅ 폼 검증 (React Hook Form + Zod)
 - ✅ 에러 핸들링 & 로깅
 - ✅ 반응형 디자인
 - ✅ Clean Booking 디자인 시스템 일관성
+- ✅ 영업시간 일괄 적용 기능 ⭐
+- ✅ 24시간 영업 지원 ⭐
+- ✅ 수의사별 영업시간 관리 ⭐
+- ✅ 수의사별 휴무일 설정 ⭐
 
 ### 🚀 Ready for Phase E
-- Database schema 준비 완료 (smart_diagnoses, booking_responses)
+- Database schema 준비 완료 (smart_diagnoses, booking_responses, veterinarians)
 - API layer 구조화 완료
 - UI 컴포넌트 재사용 가능
 - Webhook 엔드포인트 설계 완료
 
 ---
 
-**Last Updated**: 2025-10-22
-**Version**: 3.0 (Phase A-D Complete - Full Booking System)
+**Last Updated**: 2025-10-29
+**Version**: 3.1 (Phase A-D Complete - Full Booking System + Enhanced Admin Settings)
