@@ -15,6 +15,7 @@ import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
 import Booking from '@/pages/Booking'
 import MyBookings from '@/pages/MyBookings'
+import MedicalGuide from '@/pages/MedicalGuide'
 
 // Admin Pages
 import Dashboard from '@/pages/admin/Dashboard'
@@ -41,6 +42,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/medical-guide" element={<MedicalGuide />} />
+        <Route path="/medical-guide/:id" element={<MedicalGuide />} />
 
         {/* Design Concepts */}
         <Route path="/design" element={<DesignConcepts />} />
