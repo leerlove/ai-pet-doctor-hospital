@@ -14,7 +14,11 @@
       "Bash(cat:*)",
       "Bash(taskkill //F //PID 10020)",
       "Bash(taskkill:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(node analyze-address-patterns.js:*)",
+      "Bash(node check-naver-address.js:*)",
+      "Bash(node parse-road-address.js:*)",
+      "Bash(node check-duplicates-between-files.cjs:*)"
     ],
     "deny": [],
     "ask": []

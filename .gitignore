@@ -35,11 +35,3 @@ nul
 NUL
 
 .vercel
-
-# Internal development documentation
-CLAUDE*.md
-PRD_SUMMARY.md
-ADMIN_SETUP.md
-NEXT_STEPS.md
-PROGRESS_SUMMARY.md
-DEPLOYMENT_GUIDE.md
