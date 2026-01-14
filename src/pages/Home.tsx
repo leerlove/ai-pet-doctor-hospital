@@ -139,8 +139,8 @@ export default function Home() {
       </header>
 
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative w-full">
+        {/* Hero Section - 그라데이션 배경으로 시각적 구분 */}
+        <section className="relative w-full bg-gradient-to-br from-stitch-primary/5 via-white to-accent-sage/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left: Text Content */}
@@ -163,14 +163,16 @@ export default function Home() {
                     <>
                       <Link
                         to="/booking"
-                        className="h-12 px-8 rounded-lg bg-stitch-primary text-white font-bold text-base hover:bg-stitch-primary-dark transition-all shadow-lg shadow-stitch-primary/20 flex items-center gap-2"
+                        className="h-12 px-8 rounded-lg font-bold text-base transition-all shadow-lg flex items-center gap-2"
+                        style={{ backgroundColor: '#2d6a7b', color: '#ffffff' }}
                       >
                         <MaterialIcon name="calendar_add_on" className="text-[20px]" />
                         진료 예약
                       </Link>
                       <Link
                         to="/my-bookings"
-                        className="h-12 px-8 rounded-lg border border-gray-300 hover:bg-gray-50 text-text-main font-medium text-base transition-all flex items-center gap-2"
+                        className="h-12 px-8 rounded-lg border border-gray-300 hover:bg-gray-50 font-medium text-base transition-all flex items-center gap-2"
+                        style={{ color: '#131516' }}
                       >
                         <MaterialIcon name="event_note" className="text-[20px]" />
                         내 예약
@@ -180,14 +182,16 @@ export default function Home() {
                     <>
                       <Link
                         to="/signup"
-                        className="h-12 px-8 rounded-lg bg-stitch-primary text-white font-bold text-base hover:bg-stitch-primary-dark transition-all shadow-lg shadow-stitch-primary/20 flex items-center gap-2"
+                        className="h-12 px-8 rounded-lg font-bold text-base transition-all shadow-lg flex items-center gap-2"
+                        style={{ backgroundColor: '#2d6a7b', color: '#ffffff' }}
                       >
                         <MaterialIcon name="calendar_add_on" className="text-[20px]" />
                         진료 예약
                       </Link>
                       <Link
                         to="/medical-guide"
-                        className="h-12 px-8 rounded-lg border border-gray-300 hover:bg-gray-50 text-text-main font-medium text-base transition-all flex items-center gap-2"
+                        className="h-12 px-8 rounded-lg border border-gray-300 hover:bg-gray-50 font-medium text-base transition-all flex items-center gap-2"
+                        style={{ color: '#131516' }}
                       >
                         <MaterialIcon name="stethoscope" className="text-[20px]" />
                         진료 과목
@@ -235,44 +239,53 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Integrated Care System Section */}
-        <section className="py-20 bg-white">
+        {/* Integrated Care System Section - 틸 배경으로 강조 */}
+        <section className="py-20" style={{ backgroundColor: '#2d6a7b' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-12 max-w-2xl">
-              <h2 className="text-3xl font-bold text-text-main mb-4">통합 진료 시스템</h2>
-              <p className="text-lg text-gray-600">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#ffffff' }}>통합 진료 시스템</h2>
+              <p className="text-lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 AI 기술과 대학 연구 기반의 첨단 의료를 결합한 스마트 헬스케어
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Card 1: AI Diagnosis */}
-              <div className="p-8 rounded-xl bg-background-light border border-gray-100 transition-all hover:shadow-soft group">
-                <div className="w-12 h-12 rounded-lg bg-stitch-primary/10 text-stitch-primary flex items-center justify-center mb-6 group-hover:bg-stitch-primary group-hover:text-white transition-colors">
-                  <MaterialIcon name="biotech" className="text-[28px]" />
+              <div className="p-8 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                  style={{ backgroundColor: 'rgba(45,106,123,0.1)', color: '#2d6a7b' }}
+                >
+                  <MaterialIcon name="smart_toy" className="text-[28px]" />
                 </div>
-                <h3 className="text-xl font-bold text-text-main mb-3">AI 진단 시스템</h3>
+                <h3 className="text-xl font-bold mb-3" style={{ color: '#131516' }}>AI 진단 시스템</h3>
                 <p className="text-gray-600 leading-relaxed">
                   AI 수의사가 증상을 분석하고 1차 진단을 제공합니다.
                   스마트 진단서로 더 정확한 진료를 받으세요.
                 </p>
               </div>
               {/* Card 2: 24/7 Emergency */}
-              <div className="p-8 rounded-xl bg-background-light border border-gray-100 transition-all hover:shadow-soft group">
-                <div className="w-12 h-12 rounded-lg bg-alert-red/10 text-alert-red flex items-center justify-center mb-6 group-hover:bg-alert-red group-hover:text-white transition-colors">
-                  <MaterialIcon name="emergency" className="text-[28px]" />
+              <div className="p-8 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                  style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
+                >
+                  <MaterialIcon name="local_hospital" className="text-[28px]" />
                 </div>
-                <h3 className="text-xl font-bold text-text-main mb-3">365일 24시간 응급센터</h3>
+                <h3 className="text-xl font-bold mb-3" style={{ color: '#131516' }}>365일 24시간 응급센터</h3>
                 <p className="text-gray-600 leading-relaxed">
                   응급 전문의가 상주하는 외상 센터가 연중무휴로 운영되어
                   위급한 상황에 신속히 대처합니다.
                 </p>
               </div>
               {/* Card 3: University Hospital */}
-              <div className="p-8 rounded-xl bg-background-light border border-gray-100 transition-all hover:shadow-soft group">
-                <div className="w-12 h-12 rounded-lg bg-stitch-primary/10 text-stitch-primary flex items-center justify-center mb-6 group-hover:bg-stitch-primary group-hover:text-white transition-colors">
+              <div className="p-8 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                  style={{ backgroundColor: 'rgba(45,106,123,0.1)', color: '#2d6a7b' }}
+                >
                   <MaterialIcon name="school" className="text-[28px]" />
                 </div>
-                <h3 className="text-xl font-bold text-text-main mb-3">대학 부속 병원</h3>
+                <h3 className="text-xl font-bold mb-3" style={{ color: '#131516' }}>대학 부속 병원</h3>
                 <p className="text-gray-600 leading-relaxed">
                   최신 수의학 연구와 임상 시험을 바탕으로
                   과학적으로 검증된 치료 프로토콜을 제공합니다.
@@ -282,8 +295,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Medical Staff Section */}
-        <section className="py-20 bg-background-light">
+        {/* Medical Staff Section - 연한 세이지 그린 배경 */}
+        <section className="py-20 bg-gradient-to-b from-white to-accent-sage/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-end mb-12 gap-4">
               <div>
@@ -357,31 +370,33 @@ export default function Home() {
         </section>
 
         {/* Emergency Section */}
-        <section className="bg-background-dark py-16 relative overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-stitch-primary/10 to-transparent pointer-events-none" />
+        <section className="py-16 relative overflow-hidden" style={{ backgroundColor: '#22262a' }}>
+          <div className="absolute right-0 top-0 h-full w-1/2 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(45,106,123,0.1), transparent)' }} />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
               <div className="flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-alert-red/20 text-red-400 mb-4 border border-red-900/50">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded mb-4" style={{ backgroundColor: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(127,29,29,0.5)' }}>
                   <MaterialIcon name="emergency" className="text-[18px] animate-pulse" />
                   <span className="text-xs font-bold uppercase tracking-wider">응급 프로토콜</span>
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">응급 상황 발생 시</h2>
-                <p className="text-gray-400 text-lg mb-8 max-w-xl">
+                <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: '#ffffff' }}>응급 상황 발생 시</h2>
+                <p className="text-lg mb-8 max-w-xl" style={{ color: '#9ca3af' }}>
                   반려동물에게 응급 상황이 발생한 경우 즉시 병원으로 내원해 주십시오.
                   위급 상황 시 예약 없이 진료 가능합니다.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <a
                     href="tel:02-123-4567"
-                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg bg-white text-background-dark font-bold text-lg hover:bg-gray-100 transition-colors"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors"
+                    style={{ backgroundColor: '#ffffff', color: '#22262a' }}
                   >
                     <MaterialIcon name="call" />
                     02-123-4567
                   </a>
                   <a
                     href="#"
-                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg border border-gray-600 text-white font-bold text-lg hover:bg-gray-800 transition-colors"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-800 transition-colors"
+                    style={{ border: '1px solid #4b5563', color: '#ffffff' }}
                   >
                     <MaterialIcon name="directions" />
                     오시는 길
@@ -389,21 +404,21 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex-shrink-0 w-full lg:w-auto">
-                <div className="bg-surface-dark p-6 rounded-xl border border-gray-700 max-w-sm w-full">
-                  <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                    <MaterialIcon name="schedule" className="text-stitch-primary" />
+                <div className="p-6 rounded-xl max-w-sm w-full" style={{ backgroundColor: '#2d3439', border: '1px solid #374151' }}>
+                  <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: '#ffffff' }}>
+                    <MaterialIcon name="schedule" style={{ color: '#2d6a7b' }} />
                     진료 시간
                   </h3>
                   <ul className="space-y-3 text-sm">
-                    <li className="flex justify-between text-gray-300 border-b border-gray-700 pb-2">
+                    <li className="flex justify-between pb-2" style={{ color: '#d1d5db', borderBottom: '1px solid #374151' }}>
                       <span>응급진료</span>
-                      <span className="font-bold text-accent-sage">연중무휴 24시간</span>
+                      <span className="font-bold" style={{ color: '#A3D9B5' }}>연중무휴 24시간</span>
                     </li>
-                    <li className="flex justify-between text-gray-300 border-b border-gray-700 pb-2">
+                    <li className="flex justify-between pb-2" style={{ color: '#d1d5db', borderBottom: '1px solid #374151' }}>
                       <span>전문 진료 (예약)</span>
                       <span>평일: 08:00 - 18:00</span>
                     </li>
-                    <li className="flex justify-between text-gray-300">
+                    <li className="flex justify-between" style={{ color: '#d1d5db' }}>
                       <span>일반 진료</span>
                       <span>월-토: 09:00 - 17:00</span>
                     </li>
@@ -415,8 +430,8 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 pt-16 pb-8">
+      {/* Footer - 연한 회색 배경 */}
+      <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-12">
             {/* Logo & Description */}
